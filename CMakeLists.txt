@@ -5,6 +5,9 @@ project(CarbonUI LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable Qt automatic tools (moc/uic/rcc) so Q_OBJECT classes get processed
+
+
 # ########################  3rd party dependencies  #########################
 include(FetchContent)
 
@@ -32,6 +35,7 @@ endif()
 message(STATUS "Using Qt5 from: ${Qt5_DIR}")
 
 include(cmake/qt.cmake)
+qt_standard_project_setup()
 
 # Ensure Qt5 imported targets are available for linking
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
