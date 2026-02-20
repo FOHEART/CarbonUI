@@ -45,7 +45,7 @@ public:
     static void setupToolBarStyle(QToolBar* tb);
     static void setupTabWidgetStyle(QTabWidget* tw);
 	static void setupComboBoxStyle(QComboBox* cb);
-	static  void setupQStatusBarStyle(QStatusBar* sb);
+	static void setupQStatusBarStyle(QStatusBar* sb);
 
     static void applyTreeWidgetStyle(QTreeWidget* tree);
     static void setWidgetLabelsStyleRecursively(QWidget* w);

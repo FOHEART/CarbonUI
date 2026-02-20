@@ -51,6 +51,7 @@ set(PROJECT_HEADERS
 
 set(PROJECT_SOURCES
     src/CarbonUIClass.cpp
+    src/CarbonUIClass_QRadioButton.cpp
     src/groupboxcollapser.cpp
 )
 
@@ -59,7 +60,7 @@ set(PROJECT_RESOURCES
     Resource.qrc
 )
 
-add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
+add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES} "src/CarbonUIClass_QRadioButton.cpp")
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
