@@ -112,18 +112,41 @@ jobs:
         echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
         test -f "${Qt5_DIR}/Qt5Config.cmake"
 
-    - name: Export Qt env for Ubuntu
+    - name: Install Qt 5.14.2 (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '5.14.2'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        setup-python: false
+        install-deps: true
+
+    - name: Detect Qt CMake package (Ubuntu only)
       if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
-        echo "qt_version=5.14.2" >> "$GITHUB_ENV"
-        echo "qt_arch=gcc_64" >> "$GITHUB_ENV"
-        echo "Qt5_DIR=${Qt5_DIR}" >> "$GITHUB_ENV"
-        if [ -n "${Qt5_DIR}" ]; then
-          echo "CMAKE_PREFIX_PATH=$(dirname \"${Qt5_DIR}\")/.." >> "$GITHUB_ENV"
+        echo "Searching for Qt5Config.cmake under: ${RUNNER_TOOL_CACHE}"
+        QT5_CONFIG=$(find "${RUNNER_TOOL_CACHE}" -type f -name Qt5Config.cmake -print -quit)
+        if [ -z "${QT5_CONFIG}" ]; then
+          echo "Qt5Config.cmake not found under RUNNER_TOOL_CACHE"
+          find "${RUNNER_TOOL_CACHE}" -maxdepth 6 -type d -print || true
+          exit 1
         fi
-        echo "Qt5_DIR is: ${Qt5_DIR}"
-        echo "Qt5_ROOT is: ${Qt5_ROOT}"
+        QT5_CMAKE_DIR=$(dirname "${QT5_CONFIG}")
+        QT_PREFIX=$(cd "${QT5_CMAKE_DIR}/../.." && pwd)
+        echo "Found Qt5Config.cmake: ${QT5_CONFIG}"
+        echo "Qt5_DIR=${QT5_CMAKE_DIR}" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${QT_PREFIX}" >> "$GITHUB_ENV"
+
+    - name: Verify Qt CMake package (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        echo "Qt5_DIR=${Qt5_DIR}"
+        echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
+        test -f "${Qt5_DIR}/Qt5Config.cmake"
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
