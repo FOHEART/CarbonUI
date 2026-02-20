@@ -56,22 +56,33 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-   
+    - name: Setup Python (Windows only)
+      if: matrix.os == 'windows-latest'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
 
     - name: Install Qt 5.15.2 (Windows only)
       if: matrix.os == 'windows-latest'
       uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
-        arch: 'win64_msvc2022_64'
+        arch: 'win64_msvc2019_64'
         setup-python: false
-        install-deps: true # 启用自动依赖安装
+        install-deps: true
+
+    - name: Diagnose Qt architectures (Windows only)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        python -m pip install --disable-pip-version-check --no-cache-dir "aqtinstall==3.3.*"
+        python -m aqt list-qt windows desktop --arch 5.15.2
 
     - name: Export arch env for Windows
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        echo "arch=win64_msvc2022_64" >> "$GITHUB_ENV"
+        echo "arch=win64_msvc2019_64" >> "$GITHUB_ENV"
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
