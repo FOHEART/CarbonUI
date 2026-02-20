@@ -56,23 +56,16 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Setup Python 3.12 (Windows only)
-      if: matrix.os == 'windows-latest'
-      id: py
-      uses: actions/setup-python@v5
-      with:
-        # Pin to a stable version to avoid Qt installer dependencies (py7zr + native wheels)
-        # failing to build on pre-release Python versions.
-        python-version: '3.12'
+   
 
     - name: Install Qt 5.15.4 (Windows only)
       if: matrix.os == 'windows-latest'
-      uses: jurplel/install-qt-action@v2
+      uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.4'
-        host: 'windows'
+        target: 'desktop'
         arch: 'win64_msvc2022_64'
-        tools: 'tools_7z'
+        use-official: false
 
     - name: Export arch env for Windows
       if: matrix.os == 'windows-latest'
