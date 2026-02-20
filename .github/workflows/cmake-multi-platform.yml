@@ -68,13 +68,6 @@ jobs:
     - name: Install Qt 5.15.4 (Windows only)
       if: matrix.os == 'windows-latest'
       uses: jurplel/install-qt-action@v2
-      env:
-        # Ensure the action uses the setup-python interpreter, not the preinstalled one
-        pythonLocation: ${{ steps.py.outputs.python-path }}
-        Python_ROOT_DIR: ${{ steps.py.outputs.python-path }}
-        Python3_ROOT_DIR: ${{ steps.py.outputs.python-path }}
-        Python3_EXECUTABLE: ${{ steps.py.outputs.python-path }}
-        PATH: ${{ steps.py.outputs.python-path }};${{ env.PATH }}
       with:
         version: '5.15.4'
         host: 'windows'
