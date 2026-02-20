@@ -58,6 +58,7 @@ jobs:
 
     - name: Setup Python 3.10 (Windows only)
       if: matrix.os == 'windows-latest'
+      id: py
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
@@ -65,6 +66,11 @@ jobs:
     - name: Install Qt 5.15.4 (Windows only)
       if: matrix.os == 'windows-latest'
       uses: jurplel/install-qt-action@v2
+      env:
+        # Ensure the action uses the setup-python interpreter, not the preinstalled one
+        pythonLocation: ${{ steps.py.outputs.python-path }}
+        Python_ROOT_DIR: ${{ steps.py.outputs.python-path }}
+        PATH: ${{ steps.py.outputs.python-path }};${{ env.PATH }}
       with:
         version: '5.15.4'
         host: 'windows'
@@ -75,8 +81,6 @@ jobs:
       shell: bash
       run: |
         echo "arch=win64_msvc2022_64" >> "$GITHUB_ENV"
-
-   
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
