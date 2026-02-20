@@ -34,7 +34,11 @@ if(NOT DEFINED Qt5_DIR OR Qt5_DIR STREQUAL "")
     # set(Qt5_DIR "/opt/Qt/5.14.2/gcc_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
   endif()
 endif()
-message(STATUS "Using Qt5 from: ${Qt5_DIR}")
+if(DEFINED Qt5_DIR AND NOT Qt5_DIR STREQUAL "")
+  message(STATUS "Using Qt5 from: ${Qt5_DIR}")
+else()
+  message(STATUS "Using Qt5 from: (not set)")
+endif()
 
 include(cmake/qt.cmake)
 qt_standard_project_setup()
@@ -60,11 +64,14 @@ set(PROJECT_RESOURCES
     Resource.qrc
 )
 
-add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES} "src/CarbonUIClass_QRadioButton.cpp")
+add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES} )
 
+# Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
+# Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -88,4 +95,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/$<CONFIG>"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/$<CONFIG>"
 )
+
+# Optional: export a namespace alias for consumers that expect CarbonUI::CarbonUI
+add_library(CarbonUI::CarbonUI ALIAS ${PROJECT_NAME})
 
