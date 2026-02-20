@@ -64,6 +64,7 @@ jobs:
       with:
         version: '5.15.4'
         arch: 'win64_msvc2022_64'
+        setup-python: false
         install-deps: true # 启用自动依赖安装
 
     - name: Export arch env for Windows
