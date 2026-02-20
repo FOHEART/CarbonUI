@@ -26,11 +26,13 @@ else()
   message(STATUS "Qt5Core not found by initial probe; will use Qt5_DIR (if set) as a hint when locating Qt5 components")
 endif()
 
-if (WIN32)
-  # Optional hardcoded fallback for Windows development machines can remain commented out.
-  # set(Qt5_DIR "D:/Qt5.15.2/5.15.2/msvc2019_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
-else()
- set(Qt5_DIR "/opt/Qt5.14.2/5.14.2/gcc_64/lib/cmake/Qt5")
+# Prefer user/CI-provided hints. Only set a fallback when Qt5_DIR is not already defined.
+if(NOT DEFINED Qt5_DIR OR Qt5_DIR STREQUAL "")
+  if(WIN32)
+    # set(Qt5_DIR "D:/Qt5/5.15.2/msvc2019_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
+  else()
+    # set(Qt5_DIR "/opt/Qt/5.14.2/gcc_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
+  endif()
 endif()
 message(STATUS "Using Qt5 from: ${Qt5_DIR}")
 

@@ -102,7 +102,8 @@ jobs:
       shell: bash
       run: |
         echo "arch=win64_msvc2019_64" >> "$GITHUB_ENV"
-        echo "Qt5_DIR=${{ env.QT_CACHE_DIR }}" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${{ env.QT_CACHE_DIR }}" >> "$GITHUB_ENV"
+        echo "Qt5_DIR=${{ env.QT_CACHE_DIR }}\\lib\\cmake\\Qt5" >> "$GITHUB_ENV"
 
     - name: Export Qt env for Ubuntu
       if: matrix.os == 'ubuntu-latest'
@@ -110,6 +111,12 @@ jobs:
       run: |
         echo "qt_version=5.14.2" >> "$GITHUB_ENV"
         echo "qt_arch=gcc_64" >> "$GITHUB_ENV"
+        echo "Qt5_DIR=${Qt5_DIR}" >> "$GITHUB_ENV"
+        if [ -n "${Qt5_DIR}" ]; then
+          echo "CMAKE_PREFIX_PATH=$(dirname \"${Qt5_DIR}\")/.." >> "$GITHUB_ENV"
+        fi
+        echo "Qt5_DIR is: ${Qt5_DIR}"
+        echo "Qt5_ROOT is: ${Qt5_ROOT}"
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
