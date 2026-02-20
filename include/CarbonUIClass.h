@@ -21,7 +21,7 @@
 
 #include "carbonui_global.h"
 
-class CARBONUI_EXPORT CarbonUIClass
+class CARBONUI_DLL_API CarbonUIClass
 {
 public:
     // radio shape options

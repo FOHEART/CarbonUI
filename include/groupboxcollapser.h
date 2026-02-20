@@ -22,7 +22,7 @@
 #include <QtWidgets/QWidget>
 #include <QtCore/QPropertyAnimation>
 
-class CARBONUI_EXPORT QGroupBoxCollapser : public QObject
+class CARBONUI_DLL_API QGroupBoxCollapser : public QObject
 {
     Q_OBJECT
 public:

@@ -64,7 +64,20 @@ set(PROJECT_RESOURCES
     Resource.qrc
 )
 
-add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES} )
+# Allow consumers to select shared vs static build. Default: OFF (build static library)
+option(BUILD_CARBONUI_SHARED "Build CarbonUI as a shared library" OFF)
+if(BUILD_CARBONUI_SHARED)
+  message(STATUS "Config: Building CarbonUI as SHARED library")
+else()
+  message(STATUS "Config: Building CarbonUI as STATIC library")
+endif()
+
+# Create target as SHARED or STATIC depending on option
+if(BUILD_CARBONUI_SHARED)
+  add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
+else()
+  add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
+endif()
 
 # Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
 # Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
@@ -81,12 +94,14 @@ target_link_libraries(${PROJECT_NAME}
         Qt5::Widgets
 )
 
-# Define CARBONUI_LIB when building the CarbonUI library so export/import
-# macros in headers resolve correctly for the build.
-target_compile_definitions(${PROJECT_NAME}
-    PRIVATE
-        CARBONUI_LIB
-)
+# Define CARBONUI_LIB when building the CarbonUI shared library so export/import
+# macros in headers resolve correctly for the build. Consumers can check BUILD_CARBONUI_SHARED.
+if(BUILD_CARBONUI_SHARED)
+  target_compile_definitions(${PROJECT_NAME}       PRIVATE         CARBONUI_DLL_EXPORT  )
+else()
+  # For static builds, define a symbol if callers need to detect static linking
+  target_compile_definitions(${PROJECT_NAME}      PUBLIC          CARBONUI_STATIC_LIB  )
+endif()
 
 # Place generated runtime (DLL), archive (lib) and library outputs into
 # the project "lib/<Config>" directory (e.g. lib/Debug, lib/Release).

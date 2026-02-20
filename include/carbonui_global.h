@@ -8,12 +8,33 @@
 
 #include <QtCore/qglobal.h>
 
-#ifndef BUILD_STATIC
-# if defined(CARBONUI_LIB)
-#  define CARBONUI_EXPORT Q_DECL_EXPORT
-# else
-#  define CARBONUI_EXPORT Q_DECL_IMPORT
-# endif
+
+
+ //////////////////////////////////////////////////
+ // generic preprocessor defines
+
+ // use XSENS_32BIT and XSENS_64BIT to check for 32/64 bit builds in your application
+ // on non-windows systems these should be defined
+
+#ifndef CARBONUI_DLL_API
+#ifdef CARBONUI_DLL_EXPORT
+#ifdef _WIN32
+	//#pragma message("CARBONUI_DLL_API export in CARBONUIconfig.h")
+#define CARBONUI_DLL_API __declspec(dllexport)
 #else
-# define CARBONUI_EXPORT
+	//#pragma message("CARBONUI_DLL_API linux export in CARBONUIconfig.h")
+#define CARBONUI_DLL_API __attribute__((visibility("default")))
 #endif
+#else	// ifdef CARBONUI_DLL_EXPORT
+#ifdef CARBONUI_STATIC_LIB
+	//#pragma message("CARBONUI_DLL_API static in CARBONUIconfig.h")
+#define CARBONUI_DLL_API
+#elif defined(_WIN32)
+	//#pragma message("CARBONUI_DLL_API import in CARBONUIconfig.h")
+#define CARBONUI_DLL_API __declspec(dllimport)
+#else
+	//#pragma message("CARBONUI_DLL_API import/static for linux in CARBONUIconfig.h")
+#define CARBONUI_DLL_API
+#endif
+#endif	// ifdef CARBONUI_DLL_EXPORT - else
+#endif	// ifndef CARBONUI_DLL_API
