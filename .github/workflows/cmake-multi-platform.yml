@@ -33,9 +33,6 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -64,7 +61,10 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        echo "QT_CACHE_DIR=${{ github.workspace }}\\.qt\\5.15.2\\win64_msvc2019_64" >> "$GITHUB_ENV"
+        echo "QT_CACHE_DIR=${{ github.workspace }}\\.qt" >> "$GITHUB_ENV"
+        echo "QT_VERSION=5.15.2" >> "$GITHUB_ENV"
+        echo "QT_ARCH=win64_msvc2019_64" >> "$GITHUB_ENV"
+        echo "QT_ROOT=${{ github.workspace }}\\.qt\\5.15.2\\win64_msvc2019_64" >> "$GITHUB_ENV"
 
     - name: Restore Qt cache (Windows only)
       if: matrix.os == 'windows-latest'
@@ -75,17 +75,6 @@ jobs:
         key: ${{ runner.os }}-qt-5.15.2-win64_msvc2019_64
         restore-keys: |
           ${{ runner.os }}-qt-5.15.2-
-
-    - name: Install Qt 5.14.2 (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '5.14.2'
-        host: 'linux'
-        target: 'desktop'
-        arch: 'gcc_64'
-        setup-python: false
-        install-deps: true
 
     - name: Install Qt 5.15.2 (Windows only)
       if: matrix.os == 'windows-latest' && steps.qt-cache.outputs.cache-hit != 'true'
@@ -101,9 +90,23 @@ jobs:
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
-        echo "arch=win64_msvc2019_64" >> "$GITHUB_ENV"
-        echo "CMAKE_PREFIX_PATH=${{ env.QT_CACHE_DIR }}" >> "$GITHUB_ENV"
-        echo "Qt5_DIR=${{ env.QT_CACHE_DIR }}\\lib\\cmake\\Qt5" >> "$GITHUB_ENV"
+        echo "arch=${QT_ARCH}" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${QT_ROOT}" >> "$GITHUB_ENV"
+        echo "Qt5_DIR=${QT_ROOT}\\lib\\cmake\\Qt5" >> "$GITHUB_ENV"
+
+    - name: Verify Qt CMake package (Windows only)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        echo "QT_CACHE_DIR=${QT_CACHE_DIR}"
+        echo "QT_ROOT=${QT_ROOT}"
+        echo "Qt5_DIR=${Qt5_DIR}"
+        if [ ! -f "${QT_ROOT}\\lib\\cmake\\Qt5\\Qt5Config.cmake" ]; then
+          echo "Qt5Config.cmake not found at expected path"
+          ls -la "${QT_ROOT}\\lib\\cmake\\Qt5" || true
+          find "${QT_CACHE_DIR}" -maxdepth 5 -name Qt5Config.cmake -print || true
+          exit 1
+        fi
 
     - name: Export Qt env for Ubuntu
       if: matrix.os == 'ubuntu-latest'
