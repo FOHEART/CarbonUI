@@ -56,12 +56,12 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Setup Python 3.10 (Windows only)
+    - name: Setup Python 3.12 (Windows only)
       if: matrix.os == 'windows-latest'
       id: py
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.12'
 
     - name: Install Qt 5.15.4 (Windows only)
       if: matrix.os == 'windows-latest'
