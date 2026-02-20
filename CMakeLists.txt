@@ -103,13 +103,6 @@ else()
   target_compile_definitions(${PROJECT_NAME}      PUBLIC          CARBONUI_STATIC_LIB  )
 endif()
 
-# Place generated runtime (DLL), archive (lib) and library outputs into
-# the project "lib/<Config>" directory (e.g. lib/Debug, lib/Release).
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/$<CONFIG>"
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/$<CONFIG>"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib/$<CONFIG>"
-)
 
 # Optional: export a namespace alias for consumers that expect CarbonUI::CarbonUI
 add_library(CarbonUI::CarbonUI ALIAS ${PROJECT_NAME})
