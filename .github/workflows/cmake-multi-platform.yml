@@ -79,6 +79,7 @@ jobs:
         version: '5.15.4'
         host: 'windows'
         arch: 'win64_msvc2022_64'
+        tools: 'tools_7z'
 
     - name: Export arch env for Windows
       if: matrix.os == 'windows-latest'
