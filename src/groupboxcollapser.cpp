@@ -14,6 +14,11 @@
 
 QGroupBoxCollapser *QGroupBoxCollapser::installIntoGroupBox(QGroupBox *groupBox, QWidget *cornerWidget, bool expanded)
 {
+    groupBox->setStyleSheet(
+		"QGroupBox { border: none; border-bottom: 1px solid #000000; } "
+		"QLabel { color: #ffffff; font-size: 11pt; } "
+	);
+
     auto *p = new QGroupBoxCollapser(groupBox, cornerWidget);
 
     if (!expanded) {

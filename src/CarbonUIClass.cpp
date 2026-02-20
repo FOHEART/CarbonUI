@@ -14,6 +14,9 @@
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QToolBar>
+#include <QtWidgets/QToolButton>
+#include <QtWidgets/QHeaderView>
+
 #include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
 
@@ -56,7 +59,7 @@ static void setupRadioCommon(QRadioButton* rb, const QString& stylesheet)
     centerLabel->setObjectName(rb->objectName() + QStringLiteral("_label"));
     centerLabel->setAlignment(Qt::AlignCenter);
     centerLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
-    centerLabel->setStyleSheet("color: #cdcdcd;");
+    centerLabel->setStyleSheet("color: #cdcdcd; background-color: transparent; ");
 
     auto* lay = new QHBoxLayout(rb);
     lay->setContentsMargins(0, 0, 0, 0);
@@ -64,7 +67,7 @@ static void setupRadioCommon(QRadioButton* rb, const QString& stylesheet)
 
     QObject::connect(rb, &QAbstractButton::toggled, rb, [centerLabel](bool checked)
     {
-        centerLabel->setStyleSheet(checked ? "color: #ffffff;" : "color: #cdcdcd;");
+        centerLabel->setStyleSheet(checked ? "color: #ffffff; background-color: transparent; " : "color: #cdcdcd; background-color: transparent; ");
     });
 }
 
@@ -79,13 +82,16 @@ void CarbonUIClass::applyTooltipStyle(void)
     }
 }
 
-void CarbonUIClass::applyRadioStyle(QRadioButton* rb, RadioShape shape)
+void CarbonUIClass::applyRadioStyle(QRadioButton* rb, RadioShape shape, int minWidth)
 {
     if (!rb) return;
 
+    QString minWidthStr = QString("min-width: %1px; min-height: 24px; ").arg(minWidth);
+
     QString baseStyle =
         "QRadioButton { background-color: #272727; color: #cdcdcd; border-radius: 12px; padding: 2px 5px; "
-        "min-width: 28px; min-height: 24px; } "
+        + minWidthStr +
+        "} "
         "QRadioButton::indicator { width: 0px; height: 0px; margin: 0px; } "
         "QRadioButton:checked { background-color: #009ee8; color: #ffffff; } "
         "QRadioButton:hover { border: 2px solid #cdcdcd; }";
@@ -125,7 +131,8 @@ void CarbonUIClass::applyRadioStyle(QRadioButton* rb, RadioShape shape)
             "QRadioButton { background-color: #272727; color: #cdcdcd; padding: 2px 5px; "
             " border-top-left-radius: 0px; border-bottom-left-radius: 0px;"
             " border-top-right-radius: 0px; border-bottom-right-radius: 0px;"
-            "min-width: 28px; min-height: 24px; } "
+            + minWidthStr +
+            "} "
             "QRadioButton::indicator { width: 0px; height: 0px; margin: 0px; } "
             "QRadioButton:checked { background-color: #009ee8; color: #ffffff; } "
             "QRadioButton:hover { border: 2px solid #cdcdcd; }";
@@ -138,7 +145,8 @@ void CarbonUIClass::applyRadioStyle(QRadioButton* rb, RadioShape shape)
         fullStyle =
             "QRadioButton { background-color: #272727; color: #cdcdcd; border-radius: 12px; padding: 2px 5px; "
             + variant +
-            "min-width: 28px; min-height: 24px; } "
+            minWidthStr +
+            "} "
             "QRadioButton::indicator { width: 0px; height: 0px; margin: 0px; } "
             "QRadioButton:checked { background-color: #009ee8; color: #ffffff; } "
             "QRadioButton:hover { border: 2px solid #cdcdcd; }";
@@ -350,18 +358,19 @@ void CarbonUIClass::setupToolBarStyle(QToolBar* tb)
     if (!tb) return;
 
     // set toolbar icon size and add down icon
-    tb->setIconSize(QSize(12, 12));
     tb->setMovable(false);
     tb->setFloatable(false);
-    tb->setFixedHeight(40);
+    tb->setFixedHeight(32);
+ tb->setIconSize(QSize(28, 28));
 
     int iconWidth = tb->iconSize().width();
-    int spacing = iconWidth / 2; // horizontal spacing = half icon width
+    //int spacing = iconWidth / 4; // horizontal spacing = half icon width
+    int spacing = 2;
     QString tbStyle = QString(
         "QToolBar { background: #3b3b3b;  border-top: 1px solid #212121; }"
         "QToolBar::handle { width: 0px; }"
-        "QToolButton { border: none; border-radius: 10px; padding: 8px; }"
-        "QToolButton:hover { border: 2px solid #5d5d5d; }"
+        "QToolButton { border: none; border-radius: 10px; padding: 2px; }"
+        "QToolButton:hover { border: 1px solid #5d5d5d; }"
     );
 
     tb->setStyleSheet(tbStyle);
@@ -373,18 +382,96 @@ void CarbonUIClass::setupToolBarStyle(QToolBar* tb)
 
     tb->setContentsMargins(32, 0, spacing / 2, 0);
 
-  /*  QAction* downAction = tb->addAction(QIcon(":/images/down.png"), QString());
-    downAction->setToolTip("Down");
+  
+}
 
-    QAction* downAction2 = tb->addAction(QIcon(":/images/down.png"), QString());
-    downAction2->setToolTip("Down");*/
+void CarbonUIClass::setupTabWidgetStyle(QTabWidget* tw)
+{
+    if (!tw) return;
 
-    // ensure tooltip style for app: dark background and accent text color
-    //if (qApp)
-    //{
-    //    QString appStyle = qApp->styleSheet();
-    //    QString ttStyle = "QToolTip { background-color: #0f0f0f; color: #029de8; border: 2px solid #0f0f0f; border-radius: 4px; }";
-    //    // always append tooltip style so the rounded corners are enforced even if a QToolTip rule exists
-    //    qApp->setStyleSheet(appStyle + "\n" + ttStyle);
-    //}
+    QString style =
+        "QTabWidget::pane { background: #3b3b3b; border-radius: 0px; border: 1px solid #2b2b2b; }"
+        "QTabBar { padding-right: 66px; }"
+        "QTabBar::tab { background: #272727; color: #575757; padding: 8px 20px; margin-right: 0px; margin-top: 0px; border: none; }"
+        "QTabBar::tab:selected { background: #2e2e2e; color: #cdcdcd; }"
+        "QTabBar::scroller { background-color: transparent; }"
+        "QTabBar::scroller QToolButton { background-color: #3b3b3b; color: #cdcdcd; border: none; padding: 0px; margin: 0px; min-width: 22px; min-height: 22px; border-radius: 0px; }";
+
+    tw->setStyleSheet(style);
+}
+
+void CarbonUIClass::setupComboBoxStyle(QComboBox* cb)
+{
+	if (!cb) return;
+    QString style = (
+		"QComboBox { min-height: 24px; background-color: #2f2f2f; color: #cdcdcd; border: 2px solid #5f5f5f; border-radius: 12px; padding: 2px 34px 2px 8px; } "
+		"QComboBox:hover { color: #dddddd; border-color: #777777; } "
+		"QComboBox::drop-down { subcontrol-origin: padding; subcontrol-position: top right; width: 28px; background-color: #2f2f2f; border-left: 1px solid #5f5f5f; border-top-right-radius: 10px; border-bottom-right-radius: 10px; } "
+		"QComboBox::down-arrow { width: 24px; height: 24px; image: url(:/img/Resources/img/arrow_down.png); subcontrol-origin: padding; subcontrol-position: center ; } "
+		"QComboBox::down-arrow:on { image: url(:/img/Resources/img/arrow_down.png); } "
+		"QComboBox::icon { image: none; } "
+		"QComboBox QAbstractItemView { color: white; background-color: #2f2f2f; selection-background-color: rgb(60,140,255); selection-color: white; }"
+	);
+    cb->setStyleSheet(style);
+}
+
+void CarbonUIClass::setupQStatusBarStyle(QStatusBar* sb)
+{
+    if (!sb)
+        return;
+   sb->setStyleSheet("background-color: #2e2e2e; color: #676767; border: none; outline: none;");
+}
+
+void CarbonUIClass::setWidgetLabelsStyleRecursively(QWidget* w)
+{
+	if (!w) return;
+	const QObjectList& children = w->children();
+	for (QObject* o : children)
+	{
+		if (!o) continue;
+		QLabel* lab = qobject_cast<QLabel*>(o);
+		if (lab)
+		{
+			lab->setStyleSheet("color:  #676767;");
+			continue;
+		}
+		QWidget* childWidget = qobject_cast<QWidget*>(o);
+		if (childWidget)
+		{
+			setWidgetLabelsStyleRecursively(childWidget);
+		}
+	}
+}
+
+// helper to apply consistent styling to a QTreeWidget
+ void CarbonUIClass::applyTreeWidgetStyle(QTreeWidget* tree)
+{
+	if (!tree)
+		return;
+
+	// style tree widget: outer border 2px solid #5f5f5f, header background and text, header bottom inner border 1px
+	tree->setStyleSheet(
+		"QTreeWidget { border: 2px solid #5f5f5f; background-color: #2f2f2f; color: #cdcdcd; }"
+		"QHeaderView::section { background-color: #3b3b3b; color: #ffffff; border: 1px solid #5f5f5f; font-weight: bold; }"
+		"QTreeWidget::item { border: 1px solid #5f5f5f; padding-left: 0px; min-height: 24px; }"
+		"QTreeWidget::item:selected, QTreeView::item:selected { background-color: #0078d7; color: #ffffff; }"
+	);
+
+	// remove left indentation/spacing for first column and align header left
+	tree->setIndentation(0);
+	tree->setRootIsDecorated(false);
+
+	QFont mbFont = tree->font();
+	mbFont.setPointSize(13);
+	mbFont.setBold(false);
+	if (tree->header())
+	{
+		tree->header()->setDefaultAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+		tree->header()->setMinimumHeight(24);
+		mbFont.setBold(true);
+		tree->header()->setFont(mbFont);
+	}
+
+	mbFont.setBold(false);
+	tree->setFont(mbFont);
 }

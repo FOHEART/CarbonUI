@@ -52,7 +52,12 @@ set(PROJECT_SOURCES
     src/groupboxcollapser.cpp
 )
 
-add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS})
+# Qt resource file(s)
+set(PROJECT_RESOURCES
+    Resource.qrc
+)
+
+add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

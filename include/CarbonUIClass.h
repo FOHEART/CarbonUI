@@ -14,6 +14,10 @@
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QToolBar>
+#include <QtWidgets/QTabWidget>
+#include <QtWidgets/QComboBox>
+#include <QtWidgets/QTreeWidget>
+#include <QtWidgets/QStatusBar>
 
 #include "carbonui_global.h"
 
@@ -25,7 +29,7 @@ public:
 
     static void applyTooltipStyle();
     // apply radio appearance to a single QRadioButton using the specified shape
-    static void applyRadioStyle(QRadioButton* rb, RadioShape shape = Radio_FourRound);
+    static void applyRadioStyle(QRadioButton* rb, RadioShape shape = Radio_FourRound, int minWidth = 28);
 
     static void applyLineEditStyle_numberInput(QLineEdit* le, int width = 0);
     static void applyCheckStyle(QCheckBox* cb);
@@ -39,6 +43,13 @@ public:
 
     static void setupMenuBarStyle(QMenuBar* b);
     static void setupToolBarStyle(QToolBar* tb);
+    static void setupTabWidgetStyle(QTabWidget* tw);
+	static void setupComboBoxStyle(QComboBox* cb);
+	static  void setupQStatusBarStyle(QStatusBar* sb);
+
+    static void applyTreeWidgetStyle(QTreeWidget* tree);
+    static void setWidgetLabelsStyleRecursively(QWidget* w);
+
 
 private:
     // backward-compatible wrappers
