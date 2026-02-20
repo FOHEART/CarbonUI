@@ -61,6 +61,8 @@ jobs:
       id: py
       uses: actions/setup-python@v5
       with:
+        # Pin to a stable version to avoid Qt installer dependencies (py7zr + native wheels)
+        # failing to build on pre-release Python versions.
         python-version: '3.12'
 
     - name: Install Qt 5.15.4 (Windows only)
@@ -70,7 +72,6 @@ jobs:
         # Ensure the action uses the setup-python interpreter, not the preinstalled one
         pythonLocation: ${{ steps.py.outputs.python-path }}
         Python_ROOT_DIR: ${{ steps.py.outputs.python-path }}
-        PATH: ${{ steps.py.outputs.python-path }};${{ env.PATH }}
       with:
         version: '5.15.4'
         host: 'windows'
@@ -102,3 +103,4 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
+
