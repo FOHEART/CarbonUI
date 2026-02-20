@@ -127,13 +127,34 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       shell: bash
       run: |
-        echo "Searching for Qt5Config.cmake under: ${RUNNER_TOOL_CACHE}"
-        QT5_CONFIG=$(find "${RUNNER_TOOL_CACHE}" -type f -name Qt5Config.cmake -print -quit)
+        echo "Env dump (Qt-related):"
+        env | sort | grep -E '^(Qt|QT|CMAKE_PREFIX_PATH)'
+
+        SEARCH_ROOTS=()
+        [ -n "${Qt5_DIR}" ] && SEARCH_ROOTS+=("${Qt5_DIR}")
+        [ -n "${Qt5_ROOT}" ] && SEARCH_ROOTS+=("${Qt5_ROOT}")
+        [ -n "${QT_ROOT_DIR}" ] && SEARCH_ROOTS+=("${QT_ROOT_DIR}")
+        [ -n "${RUNNER_TEMP}" ] && SEARCH_ROOTS+=("${RUNNER_TEMP}")
+        SEARCH_ROOTS+=("${HOME}" "${GITHUB_WORKSPACE}" "/opt")
+
+        echo "Search roots: ${SEARCH_ROOTS[*]}"
+
+        QT5_CONFIG=""
+        for root in "${SEARCH_ROOTS[@]}"; do
+          if [ -d "${root}" ]; then
+            echo "Searching for Qt5Config.cmake under: ${root}"
+            QT5_CONFIG=$(find "${root}" -type f -name Qt5Config.cmake -print -quit 2>/dev/null || true)
+            if [ -n "${QT5_CONFIG}" ]; then
+              break
+            fi
+          fi
+        done
+
         if [ -z "${QT5_CONFIG}" ]; then
-          echo "Qt5Config.cmake not found under RUNNER_TOOL_CACHE"
-          find "${RUNNER_TOOL_CACHE}" -maxdepth 6 -type d -print || true
+          echo "Qt5Config.cmake not found in any search root"
           exit 1
         fi
+
         QT5_CMAKE_DIR=$(dirname "${QT5_CONFIG}")
         QT_PREFIX=$(cd "${QT5_CMAKE_DIR}/../.." && pwd)
         echo "Found Qt5Config.cmake: ${QT5_CONFIG}"
