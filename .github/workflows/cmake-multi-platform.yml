@@ -64,7 +64,6 @@ jobs:
         echo "QT_CACHE_DIR=${{ github.workspace }}\\.qt" >> "$GITHUB_ENV"
         echo "QT_VERSION=5.15.2" >> "$GITHUB_ENV"
         echo "QT_ARCH=win64_msvc2019_64" >> "$GITHUB_ENV"
-        echo "QT_ROOT=${{ github.workspace }}\\.qt\\5.15.2\\win64_msvc2019_64" >> "$GITHUB_ENV"
 
     - name: Restore Qt cache (Windows only)
       if: matrix.os == 'windows-latest'
@@ -86,27 +85,32 @@ jobs:
         setup-python: false
         install-deps: true
 
-    - name: Export Qt env for Windows
+    - name: Detect Qt CMake package (Windows only)
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
+        echo "Searching for Qt5Config.cmake under: ${QT_CACHE_DIR}"
+        QT5_CONFIG=$(find "${QT_CACHE_DIR}" -type f -name Qt5Config.cmake -print -quit)
+        if [ -z "${QT5_CONFIG}" ]; then
+          echo "Qt5Config.cmake not found in cache dir"
+          find "${QT_CACHE_DIR}" -maxdepth 6 -type d -print || true
+          exit 1
+        fi
+        QT5_CMAKE_DIR=$(dirname "${QT5_CONFIG}")
+        QT_PREFIX=$(cd "${QT5_CMAKE_DIR}/../.." && pwd)
+        echo "Found Qt5Config.cmake: ${QT5_CONFIG}"
+        echo "Qt5_DIR=${QT5_CMAKE_DIR}" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${QT_PREFIX}" >> "$GITHUB_ENV"
         echo "arch=${QT_ARCH}" >> "$GITHUB_ENV"
-        echo "CMAKE_PREFIX_PATH=${QT_ROOT}" >> "$GITHUB_ENV"
-        echo "Qt5_DIR=${QT_ROOT}\\lib\\cmake\\Qt5" >> "$GITHUB_ENV"
 
     - name: Verify Qt CMake package (Windows only)
       if: matrix.os == 'windows-latest'
       shell: bash
       run: |
         echo "QT_CACHE_DIR=${QT_CACHE_DIR}"
-        echo "QT_ROOT=${QT_ROOT}"
         echo "Qt5_DIR=${Qt5_DIR}"
-        if [ ! -f "${QT_ROOT}\\lib\\cmake\\Qt5\\Qt5Config.cmake" ]; then
-          echo "Qt5Config.cmake not found at expected path"
-          ls -la "${QT_ROOT}\\lib\\cmake\\Qt5" || true
-          find "${QT_CACHE_DIR}" -maxdepth 5 -name Qt5Config.cmake -print || true
-          exit 1
-        fi
+        echo "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}"
+        test -f "${Qt5_DIR}/Qt5Config.cmake"
 
     - name: Export Qt env for Ubuntu
       if: matrix.os == 'ubuntu-latest'
