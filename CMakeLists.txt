@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ########################  3rd party dependencies  #########################
 include(FetchContent)
+include(cmake/CPM.cmake)
 
 # Try to auto-detect Qt5 via find_package (so we can derive Qt5_DIR from the discovered Qt5Core)
 # This allows users to rely on find_package instead of hardcoding Qt5 paths.
@@ -34,11 +35,7 @@ if(NOT DEFINED Qt5_DIR OR Qt5_DIR STREQUAL "")
     # set(Qt5_DIR "/opt/Qt/5.14.2/gcc_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
   endif()
 endif()
-if(DEFINED Qt5_DIR AND NOT Qt5_DIR STREQUAL "")
-  message(STATUS "Using Qt5 from: ${Qt5_DIR}")
-else()
-  message(STATUS "Using Qt5 from: (not set)")
-endif()
+
 
 include(cmake/qt.cmake)
 qt_standard_project_setup()
@@ -78,20 +75,13 @@ if(BUILD_CARBONUI_SHARED)
 else()
   add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
 endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 
 # Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
 # Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:include>
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        Qt5::Core
-         Qt5::Gui
-        Qt5::Widgets
 )
 
 # Define CARBONUI_LIB when building the CarbonUI shared library so export/import
