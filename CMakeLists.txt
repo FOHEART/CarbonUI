@@ -27,21 +27,15 @@ else()
   message(STATUS "Qt5Core not found by initial probe; will use Qt5_DIR (if set) as a hint when locating Qt5 components")
 endif()
 
-# Prefer user/CI-provided hints. Only set a fallback when Qt5_DIR is not already defined.
-if(NOT DEFINED Qt5_DIR OR Qt5_DIR STREQUAL "")
-  if(WIN32)
-    # set(Qt5_DIR "D:/Qt5/5.15.2/msvc2019_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
-  else()
-    # set(Qt5_DIR "/opt/Qt/5.14.2/gcc_64/lib/cmake/Qt5" CACHE PATH "Path to Qt5Config.cmake")
-  endif()
-endif()
-
-
 include(cmake/qt.cmake)
 qt_standard_project_setup()
 
 # Ensure Qt5 imported targets are available for linking
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
+
+# Manual Qt tools: moc, uic, rcc (AUTO* are OFF)
+# Must be included after find_package(Qt5) so Qt5::moc / Qt5::rcc targets exist.
+include(cmake/ManualQtTools.cmake)
 
 # headers go into include/, sources into src/
 set(PROJECT_HEADERS
@@ -61,6 +55,15 @@ set(PROJECT_RESOURCES
     Resource.qrc
 )
 
+# Run moc on all public headers that may contain Q_OBJECT/Q_GADGET
+qt_manual_moc(MOC_SOURCES HEADERS ${PROJECT_HEADERS})
+
+# No .ui files in this project; add them here when needed:
+# qt_manual_uic(UIC_SOURCES UI_FILES ...)
+
+# Run rcc on all .qrc resource files
+qt_manual_rcc(RCC_SOURCES QRC_FILES ${PROJECT_RESOURCES})
+
 # Allow consumers to select shared vs static build. Default: OFF (build static library)
 option(BUILD_CARBONUI_SHARED "Build CarbonUI as a shared library" OFF)
 if(BUILD_CARBONUI_SHARED)
@@ -71,28 +74,35 @@ endif()
 
 # Create target as SHARED or STATIC depending on option
 if(BUILD_CARBONUI_SHARED)
-  add_library(${PROJECT_NAME} SHARED ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
+  add_library(${PROJECT_NAME} SHARED
+    ${PROJECT_SOURCES} ${PROJECT_HEADERS}
+    ${MOC_SOURCES} ${RCC_SOURCES})
 else()
-  add_library(${PROJECT_NAME} STATIC ${PROJECT_SOURCES} ${PROJECT_HEADERS} ${PROJECT_RESOURCES})
+  add_library(${PROJECT_NAME} STATIC
+    ${PROJECT_SOURCES} ${PROJECT_HEADERS}
+    ${MOC_SOURCES} ${RCC_SOURCES})
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 
 # Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
 # Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
+# Also expose the moc/uic binary output dirs so generated headers can be #included.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>
+    PRIVATE
+      ${CMAKE_CURRENT_BINARY_DIR}/moc
+      ${CMAKE_CURRENT_BINARY_DIR}/uic
 )
 
 # Define CARBONUI_LIB when building the CarbonUI shared library so export/import
 # macros in headers resolve correctly for the build. Consumers can check BUILD_CARBONUI_SHARED.
 if(BUILD_CARBONUI_SHARED)
-  target_compile_definitions(${PROJECT_NAME}       PRIVATE         CARBONUI_DLL_EXPORT  )
+  target_compile_definitions(${PROJECT_NAME} PRIVATE CARBONUI_DLL_EXPORT)
 else()
-  # For static builds, define a symbol if callers need to detect static linking
-  target_compile_definitions(${PROJECT_NAME}      PUBLIC          CARBONUI_STATIC_LIB  )
+  target_compile_definitions(${PROJECT_NAME} PUBLIC  CARBONUI_STATIC_LIB)
 endif()
-
 
 # Optional: export a namespace alias for consumers that expect CarbonUI::CarbonUI
 add_library(CarbonUI::CarbonUI ALIAS ${PROJECT_NAME})
