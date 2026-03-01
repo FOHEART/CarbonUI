@@ -62,7 +62,12 @@ qt5_wrap_ui(UIC_SOURCES ${PROJECT_UI_FILES})
 qt5_add_resources(RCC_SOURCES ${PROJECT_RESOURCES})
 
 # Allow consumers to select shared vs static build. Default: OFF (build static library)
-option(BUILD_CARBONUI_SHARED "Build CarbonUI as a shared library" OFF)
+if(NOT DEFINED BUILD_CARBONUI_SHARED)
+  option(BUILD_CARBONUI_SHARED "Build CarbonUI as a shared library" OFF)
+else()
+  message(STATUS "BUILD_CARBONUI_SHARED provided by caller: ${BUILD_CARBONUI_SHARED}")
+endif()
+
 if(BUILD_CARBONUI_SHARED)
   message(STATUS "Config: Building CarbonUI as SHARED library")
 else()
