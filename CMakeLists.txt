@@ -33,10 +33,6 @@ qt_standard_project_setup()
 # Ensure Qt5 imported targets are available for linking
 find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Manual Qt tools: moc, uic, rcc (AUTO* are OFF)
-# Must be included after find_package(Qt5) so Qt5::moc / Qt5::rcc targets exist.
-include(cmake/ManualQtTools.cmake)
-
 # headers go into include/, sources into src/
 set(PROJECT_HEADERS
     include/carbonui_global.h
@@ -50,19 +46,20 @@ set(PROJECT_SOURCES
     src/groupboxcollapser.cpp
 )
 
+# Qt Designer UI file(s)
+# (none currently in this project; add .ui files here when needed)
+set(PROJECT_UI_FILES
+)
+
 # Qt resource file(s)
 set(PROJECT_RESOURCES
     Resource.qrc
 )
 
-# Run moc on all public headers that may contain Q_OBJECT/Q_GADGET
-qt_manual_moc(MOC_SOURCES HEADERS ${PROJECT_HEADERS})
-
-# No .ui files in this project; add them here when needed:
-# qt_manual_uic(UIC_SOURCES UI_FILES ...)
-
-# Run rcc on all .qrc resource files
-qt_manual_rcc(RCC_SOURCES QRC_FILES ${PROJECT_RESOURCES})
+# Manual Qt processing (no CMAKE_AUTOMOC/AUTOUIC/AUTORCC):
+qt5_wrap_cpp(MOC_SOURCES ${PROJECT_HEADERS})
+qt5_wrap_ui(UIC_SOURCES ${PROJECT_UI_FILES})
+qt5_add_resources(RCC_SOURCES ${PROJECT_RESOURCES})
 
 # Allow consumers to select shared vs static build. Default: OFF (build static library)
 option(BUILD_CARBONUI_SHARED "Build CarbonUI as a shared library" OFF)
@@ -76,24 +73,23 @@ endif()
 if(BUILD_CARBONUI_SHARED)
   add_library(${PROJECT_NAME} SHARED
     ${PROJECT_SOURCES} ${PROJECT_HEADERS}
-    ${MOC_SOURCES} ${RCC_SOURCES})
+    ${MOC_SOURCES} ${UIC_SOURCES} ${RCC_SOURCES})
 else()
   add_library(${PROJECT_NAME} STATIC
     ${PROJECT_SOURCES} ${PROJECT_HEADERS}
-    ${MOC_SOURCES} ${RCC_SOURCES})
+    ${MOC_SOURCES} ${UIC_SOURCES} ${RCC_SOURCES})
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 
 # Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
 # Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
-# Also expose the moc/uic binary output dirs so generated headers can be #included.
+# Also expose the uic binary output dir so generated headers can be #included.
 target_include_directories(${PROJECT_NAME}
     PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:include>
     PRIVATE
-      ${CMAKE_CURRENT_BINARY_DIR}/moc
-      ${CMAKE_CURRENT_BINARY_DIR}/uic
+      ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Define CARBONUI_LIB when building the CarbonUI shared library so export/import
