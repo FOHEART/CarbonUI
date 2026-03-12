@@ -17,6 +17,7 @@
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QTreeWidget>
+#include <QtWidgets/QTreeView>
 #include <QtWidgets/QStatusBar>
 
 #include "carbonui_global.h"
@@ -48,6 +49,8 @@ public:
 	static void setupQStatusBarStyle(QStatusBar* sb);
 
     static void applyTreeWidgetStyle(QTreeWidget* tree);
+    // apply style to a generic QTreeView (accepts QTreeView and its subclasses)
+    static void applyTreeViewStyle(QTreeView* view);
     static void setWidgetLabelsStyleRecursively(QWidget* w);
 
 

@@ -378,3 +378,38 @@ void CarbonUIClass::setWidgetLabelsStyleRecursively(QWidget* w)
 	mbFont.setBold(false);
 	tree->setFont(mbFont);
 }
+
+// helper to apply consistent styling to a QTreeView (or subclasses)
+void CarbonUIClass::applyTreeViewStyle(QTreeView* view)
+{
+	if (!view)
+		return;
+
+	// Use resource images for branch indicators
+    view->setStyleSheet(R"(
+            QTreeView { background-color: transparent; color: white; border: none; }
+            QTreeView::item { color: white; border: none; }
+            QTreeView::item:selected { background-color: #2e2e2e; color: white; border: none; }
+            QTreeView::item:selected:active { background-color: #2e2e2e; color: white; }
+            QTreeView::item:focus { outline: none; }
+            QTreeView::branch { background: transparent; }
+            /* Closed (right-pointing) arrow - white image resource */
+            QTreeView::branch:closed:has-children {
+                image: url(":/images/Resources/img/arrow_right.png");
+                width: 24px; height: 24px; }
+            /* Open (down-pointing) arrow - white image resource */
+            QTreeView::branch:open:has-children {
+                image: url(":/images/Resources/img/arrow_down.png");
+                width: 24px; height: 24px; }
+        )");
+
+	// Ensure the view shows branch indicators and can expand
+	view->setRootIsDecorated(true);
+	view->setItemsExpandable(true);
+	view->setExpandsOnDoubleClick(true);
+	// Ensure there is space for the branch icon
+    view->setIndentation(14);
+
+	// Disable editing via the view
+    view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
