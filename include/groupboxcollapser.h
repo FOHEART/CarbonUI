@@ -30,14 +30,19 @@ public:
 
     void addWidget(QWidget *widget);
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
     QGroupBoxCollapser(QGroupBox *groupBox, QWidget *cornerWidget = nullptr);
     void toggle(bool checked);
+    void syncTitleFromGroupBox();
 
 private slots:
     void onAnimationFinished();
 
 private:
+    QGroupBox* m_groupBox;
     QWidget *m_titleWidget;
     QToolButton *m_toggleButton;
     QWidget *m_contentArea;

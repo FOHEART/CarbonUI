@@ -10,6 +10,7 @@
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QStyle>
 #include <QtCore/QVariant>
+#include <QtCore/QEvent>
 #include <QtCore/QPropertyAnimation>
 
 QGroupBoxCollapser *QGroupBoxCollapser::installIntoGroupBox(QGroupBox *groupBox, QWidget *cornerWidget, bool expanded)
@@ -32,7 +33,8 @@ QGroupBoxCollapser *QGroupBoxCollapser::installIntoGroupBox(QGroupBox *groupBox,
 }
 
 QGroupBoxCollapser::QGroupBoxCollapser(QGroupBox *groupBox, QWidget *cornerWidget)
-    : QObject(groupBox), m_animation(nullptr), m_collapsing(false)
+    : QObject(groupBox), m_groupBox(groupBox), m_titleWidget(nullptr), m_toggleButton(nullptr),
+      m_contentArea(nullptr), m_animation(nullptr), m_collapsing(false)
 {
     auto *mainLayout = new QVBoxLayout();
     mainLayout->setSpacing(0);
@@ -90,9 +92,54 @@ QGroupBoxCollapser::QGroupBoxCollapser(QGroupBox *groupBox, QWidget *cornerWidge
 
     groupBox->layout()->setMenuBar(titleWidget);
     groupBox->setTitle("");
+    groupBox->installEventFilter(this);
    
 
     connect(m_toggleButton, &QAbstractButton::clicked, this, &QGroupBoxCollapser::toggle);
+}
+
+bool QGroupBoxCollapser::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_groupBox)
+    {
+        switch (event->type())
+        {
+            case QEvent::LayoutRequest:
+            case QEvent::UpdateRequest:
+            case QEvent::Paint:
+            case QEvent::Polish:
+            case QEvent::PolishRequest:
+            case QEvent::LanguageChange:
+                syncTitleFromGroupBox();
+                break;
+            default:
+                break;
+        }
+    }
+
+    return QObject::eventFilter(watched, event);
+}
+
+void QGroupBoxCollapser::syncTitleFromGroupBox()
+{
+    if (!m_groupBox || !m_toggleButton)
+    {
+        return;
+    }
+
+    const QString groupTitle = m_groupBox->title();
+    if (groupTitle.isEmpty())
+    {
+        return;
+    }
+
+    if (m_toggleButton->text() != groupTitle)
+    {
+        m_toggleButton->setText(groupTitle);
+        m_toggleButton->update();
+    }
+
+    m_groupBox->setTitle(QString());
 }
 
 void QGroupBoxCollapser::onAnimationFinished()
