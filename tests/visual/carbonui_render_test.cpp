@@ -19,6 +19,10 @@
  * 文字断言依赖平台字体库：`QT_QPA_PLATFORM=offscreen` 在 Windows 上字体库为空，
  * 此时用例会用 `GTEST_SKIP()` 跳过文字部分，填充/圆角断言仍然照跑。
  *
+ * 采样陷阱：断言"填充色"时必须避开控件正中——标题就画在那里，字形连同抗锯齿边缘
+ * 会覆盖中心像素，而不同机器（字体度量、提示方式、DPI）会让同一坐标恰好落在
+ * "字母"或"字母间隙"上，造成只在 CI 上失败的假阴性。填充采样一律取内边距。
+ *
  * 每次渲染都会把 PNG 存到可执行文件同级的 `ui-artifacts/`，可以直接打开肉眼复核。
  */
 
@@ -82,12 +86,16 @@ TEST(RenderEvidence, ButtonRendersAccentFillWithRoundedCorners)
     ASSERT_FALSE(image.isNull());
     delete host;
 
-    // 中心是实心强调色；按钮矩形左上角（20,20）必在圆角之外，应透出品红底色。
-    EXPECT_EQ(carbonui_test::pixelName(image, 80, 36), kAccent);
+    // 按钮矩形左上角（20,20）必在圆角之外，应透出品红底色。
     EXPECT_EQ(carbonui_test::pixelName(image, 20, 20), kBackdrop)
         << "border-radius must actually clip the corner";
-    // 左边中部仍在填充范围内。
-    EXPECT_EQ(carbonui_test::pixelName(image, 25, 36), kAccent);
+    // 填充采样必须避开正中：标题就画在那里，字形（含抗锯齿边缘）会覆盖中心像素，
+    // 不同机器上的字体度量/提示差异会让同一个坐标落在"字母"或"字母间隙"上。
+    // 左右内边距是纯填充区域，与字体无关。
+    EXPECT_EQ(carbonui_test::pixelName(image, 25, 36), kAccent)
+        << "left padding must be filled with the accent colour";
+    EXPECT_EQ(carbonui_test::pixelName(image, 115, 36), kAccent)
+        << "right padding must be filled with the accent colour";
 }
 
 TEST(RenderEvidence, RectangleButtonKeepsSquareCorner)
@@ -103,7 +111,9 @@ TEST(RenderEvidence, RectangleButtonKeepsSquareCorner)
 
     // 直角：同一点必须是强调色，与上一个用例形成对照。
     EXPECT_EQ(carbonui_test::pixelName(image, 20, 20), kAccent);
-    EXPECT_EQ(carbonui_test::pixelName(image, 80, 36), kAccent);
+    // 填充断言同样避开正中标题，只取左侧内边距。
+    EXPECT_EQ(carbonui_test::pixelName(image, 25, 36), kAccent)
+        << "square button must stay filled right up to the corner";
 }
 
 TEST(RenderEvidence, ButtonTextIsReallyPainted)
