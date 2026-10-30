@@ -74,26 +74,6 @@ jobs:
         echo "QT_VERSION=5.14.2" >> "$GITHUB_ENV"
         echo "QT_ARCH=gcc_64" >> "$GITHUB_ENV"
 
-    - name: Restore Qt cache (Windows only)
-      if: matrix.os == 'windows-latest'
-      id: qt-cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.QT_CACHE_DIR }}
-        key: ${{ runner.os }}-qt-5.15.2-win64_msvc2019_64
-        restore-keys: |
-          ${{ runner.os }}-qt-5.15.2-
-
-    - name: Restore Qt cache (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
-      id: qt-cache-ubuntu
-      uses: actions/cache@v4
-      with:
-        path: ${{ env.QT_CACHE_DIR }}
-        key: ${{ runner.os }}-qt-5.14.2-gcc_64
-        restore-keys: |
-          ${{ runner.os }}-qt-5.14.2-
-
     - name: Install system dependencies (Ubuntu only)
       if: matrix.os == 'ubuntu-latest'
       shell: bash
@@ -116,7 +96,7 @@ jobs:
           libxcb-xkb1
 
     - name: Install Qt 5.15.2 (Windows only)
-      if: matrix.os == 'windows-latest' && steps.qt-cache.outputs.cache-hit != 'true'
+      if: matrix.os == 'windows-latest'
       uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
@@ -124,6 +104,11 @@ jobs:
         dir: ${{ env.QT_CACHE_DIR }}
         setup-python: false
         install-deps: true
+        # Cache mode: the action caches QT_CACHE_DIR itself (key = host, OS
+        # release, target, arch, version, dir), so a warm run restores Qt from
+        # the Actions cache instead of downloading ~1 GB with aqtinstall, and
+        # still sets Qt5_DIR / QT_ROOT_DIR / PATH on a hit.
+        cache: true
 
     - name: Detect Qt CMake package (Windows only)
       if: matrix.os == 'windows-latest'
@@ -153,7 +138,7 @@ jobs:
         test -f "${Qt5_DIR}/Qt5Config.cmake"
 
     - name: Install Qt 5.14.2 (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest' && steps.qt-cache-ubuntu.outputs.cache-hit != 'true'
+      if: matrix.os == 'ubuntu-latest'
       uses: jurplel/install-qt-action@v4
       with:
         version: '5.14.2'
@@ -163,6 +148,9 @@ jobs:
         dir: ${{ env.QT_CACHE_DIR }}
         setup-python: false
         install-deps: true
+        # Same cache mode as the Windows job; the key includes host + OS release
+        # so the two platforms never share (or clobber) each other's archive.
+        cache: true
 
     - name: Detect Qt CMake package (Ubuntu only)
       if: matrix.os == 'ubuntu-latest'
