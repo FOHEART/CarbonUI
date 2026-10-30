@@ -1,7 +1,27 @@
-﻿/*
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/**
+ * @file  CarbonUIClass.cpp
+ * @brief CarbonUIClass 中"通用控件"样式助手的实现。
+ * @author CarbonUI
+ * @date  2026-10-30
+ * @version 1.0.0
+ * @ingroup carbonui
+ *
+ * @details
+ * 本文件实现除单选按钮以外的全部样式助手（单选按钮见
+ * CarbonUIClass_QRadioButton.cpp）。公开接口的完整参数说明写在
+ * CarbonUIClass.h，这里只补充实现层面的约定：
+ * - 每个助手开头都有 `if (!w) return;` 的判空，因此调用方可以传入可能缺失的控件；
+ * - 样式字符串是内联字面量，没有主题系统，改配色就是改这些字面量；
+ * - 悬停/点击这类交互不能用 QSS 表达时，改为在控件上安装本地事件过滤器，
+ *   过滤器以控件为父对象，随控件一起销毁。
+ *
+ * 线程约定：全部函数都直接操作 QWidget，只能在 GUI 主线程调用。
  */
 
 #include "CarbonUIClass.h"
@@ -20,11 +40,33 @@
 #include <QtGui/QIcon>
 #include <QtWidgets/QApplication>
 
-// helper filter to select all text when the line edit receives focus
+/**
+ * @brief 聚焦时自动全选文本的事件过滤器。
+ *
+ * @details
+ * 数字输入框的典型用法是"整段替换"：鼠标点进来、或键盘 Tab 进来时把原有数值
+ * 全选，用户直接敲新值即可覆盖。因为 `QLineEdit` 自身没有这个开关，这里用
+ * `QTimer::singleShot(0, ...)` 把全选推迟到 Qt 完成自己的焦点/鼠标处理后执行，
+ * 否则会在鼠标按下时被随后的光标定位覆盖。
+ *
+ * 该过滤器以被监视的 `QLineEdit` 为父对象，随输入框一起销毁。
+ */
 class SelectAllOnFocusFilter : public QObject
 {
 public:
+    /**
+     * @brief 构造过滤器。
+     * @param[in] parent 父对象，通常传被监视的 QLineEdit；可为 NULL。
+     */
     SelectAllOnFocusFilter(QObject* parent = nullptr) : QObject(parent) {}
+
+    /**
+     * @brief 在获得焦点或用鼠标按下时把文本全选。
+     *
+     * @param[in] watched 事件接收者，期望是 QLineEdit；其它类型原样放行。
+     * @param[in] event   事件对象，不可为 NULL。
+     * @return 恒定返回 false，事件继续交给 QLineEdit 自身处理。
+     */
     bool eventFilter(QObject* watched, QEvent* event) override
     {
         if (auto le = qobject_cast<QLineEdit*>(watched))
@@ -44,6 +86,85 @@ public:
         return QObject::eventFilter(watched, event);
     }
 };
+
+namespace
+{
+/**
+ * @brief 复选框的自绘交互过滤器：悬停高亮 + 左键切换 + 指示灯配色。
+ *
+ * @details
+ * QSS 无法表达"悬停时描边变白、勾选时描边变蓝且指示灯同步换色"这套效果，
+ * 也无法让 0x0 的原生 indicator 之外再多画一个圆点，因此在复选框上安装
+ * 本过滤器接管 Enter / Leave / MouseButtonRelease 三类事件。
+ */
+class HoverWatcher : public QObject
+{
+public:
+    /**
+     * @brief 构造过滤器并挂到复选框上。
+     * @param[in] indicator 复选框内部的指示灯子控件，不可为 NULL，不取得所有权。
+     * @param[in] cb        被监视的复选框，不可为 NULL，作为本对象的父对象。
+     */
+    HoverWatcher(QWidget* indicator, QCheckBox* cb) : QObject(cb), m_indicator(indicator), m_cb(cb) {}
+
+    /**
+     * @brief 处理悬停与左键释放。
+     *
+     * @details
+     * - Enter：描边改为白色；
+     * - Leave：恢复按勾选状态决定的描边色（蓝 / 灰）；
+     * - MouseButtonRelease 且为左键：切换勾选状态并**吞掉**事件，避免
+     *   QCheckBox 自身的按下/抬起逻辑再切换一次。
+     *
+     * @param[in] watched 事件接收者，本过滤器只处理复选框自身的事件。
+     * @param[in] event   事件对象，不可为 NULL。
+     * @return true 表示事件已被处理且不再向下传递（仅左键释放时）；
+     *         其余情况返回基类结果 false。
+     */
+    bool eventFilter(QObject* watched, QEvent* event) override
+    {
+        if (event->type() == QEvent::Enter)
+        {
+            m_cb->setStyleSheet(
+                "QCheckBox { background-color: transparent; border: 2px solid #ffffff; border-radius: 8px;} "
+                "QCheckBox::indicator { width: 0px; height: 0px; } "
+            );
+        }
+        else if (event->type() == QEvent::Leave)
+        {
+            if (m_cb->isChecked())
+            {
+                m_cb->setStyleSheet(
+                    "QCheckBox { background-color: transparent; border: 2px solid #009ee8; border-radius: 8px;} "
+                    "QCheckBox::indicator { width: 0px; height: 0px; } "
+                );
+                m_indicator->setStyleSheet("background-color: transparent; border: 4px solid #009ee8; border-radius: 4px;");
+            }
+            else
+            {
+                m_cb->setStyleSheet(
+                    "QCheckBox { background-color: transparent; border: 2px solid #636363; border-radius: 8px;} "
+                    "QCheckBox::indicator { width: 0px; height: 0px; } "
+                );
+                m_indicator->setStyleSheet("background-color: transparent; border: 4px solid #636363; border-radius: 4px;");
+            }
+        }
+        else if (event->type() == QEvent::MouseButtonRelease)
+        {
+            auto* me = static_cast<QMouseEvent*>(event);
+            if (me->button() == Qt::LeftButton)
+            {
+                m_cb->setChecked(!m_cb->isChecked());
+                return true;
+            }
+        }
+        return QObject::eventFilter(watched, event);
+    }
+private:
+    QWidget* m_indicator;  ///< 被同步换色的指示灯子控件，不取得所有权。
+    QCheckBox* m_cb;       ///< 被监视的复选框，同时是本对象的父对象。
+};
+} // namespace
 
 
 void CarbonUIClass::applyTooltipStyle(void)
@@ -132,53 +253,6 @@ void CarbonUIClass::applyCheckStyle(QCheckBox* cb)
         indicator->setStyleSheet(style);
     });
 
-    class HoverWatcher : public QObject
-    {
-    public:
-        HoverWatcher(QWidget* indicator, QCheckBox* cb) : QObject(cb), m_indicator(indicator), m_cb(cb) {}
-        bool eventFilter(QObject* watched, QEvent* event) override
-        {
-            if (event->type() == QEvent::Enter)
-            {
-                m_cb->setStyleSheet(
-                    "QCheckBox { background-color: transparent; border: 2px solid #ffffff; border-radius: 8px;} "
-                    "QCheckBox::indicator { width: 0px; height: 0px; } "
-                );
-            }
-            else if (event->type() == QEvent::Leave)
-            {
-                if (m_cb->isChecked())
-                {
-                    m_cb->setStyleSheet(
-                        "QCheckBox { background-color: transparent; border: 2px solid #009ee8; border-radius: 8px;} "
-                        "QCheckBox::indicator { width: 0px; height: 0px; } "
-                    );
-                    m_indicator->setStyleSheet("background-color: transparent; border: 4px solid #009ee8; border-radius: 4px;");
-                }
-                else
-                {
-                    m_cb->setStyleSheet(
-                        "QCheckBox { background-color: transparent; border: 2px solid #636363; border-radius: 8px;} "
-                        "QCheckBox::indicator { width: 0px; height: 0px; } "
-                    );
-                    m_indicator->setStyleSheet("background-color: transparent; border: 4px solid #636363; border-radius: 4px;");
-                }
-            }
-            else if (event->type() == QEvent::MouseButtonRelease)
-            {
-                auto* me = static_cast<QMouseEvent*>(event);
-                if (me->button() == Qt::LeftButton)
-                {
-                    m_cb->setChecked(!m_cb->isChecked());
-                    return true;
-                }
-            }
-            return QObject::eventFilter(watched, event);
-        }
-    private:
-        QWidget* m_indicator;
-        QCheckBox* m_cb;
-    };
 
     auto* watcher = new HoverWatcher(indicator, cb);
     cb->installEventFilter(watcher);

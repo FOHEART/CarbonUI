@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16)
 project(CarbonUI LANGUAGES CXX)
 
 
@@ -86,6 +86,12 @@ else()
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 
+# Sources contain UTF-8 (Chinese) Doxygen comments; MSVC would otherwise decode
+# them with the system code page and emit C4819 / break the comment blocks.
+if(MSVC)
+  target_compile_options(${PROJECT_NAME} PRIVATE /utf-8)
+endif()
+
 # Use target-local include directories so consuming projects (CPM/FetchContent) find headers.
 # Provide BUILD_INTERFACE for in-tree builds and INSTALL_INTERFACE for installed layout.
 # Also expose the uic binary output dir so generated headers can be #included.
@@ -107,4 +113,20 @@ endif()
 
 # Optional: export a namespace alias for consumers that expect CarbonUI::CarbonUI
 add_library(CarbonUI::CarbonUI ALIAS ${PROJECT_NAME})
+
+# ########################  unit tests (TDD)  #########################
+# Standalone checkouts default to ON so the red/green loop is one command away;
+# consumers pulling CarbonUI in via add_subdirectory/CPM default to OFF and can
+# opt in with -DBUILD_CARBONUI_TESTS=ON.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(CARBONUI_TESTS_DEFAULT ON)
+else()
+  set(CARBONUI_TESTS_DEFAULT OFF)
+endif()
+option(BUILD_CARBONUI_TESTS "Build the CarbonUI GoogleTest unit test suite" ${CARBONUI_TESTS_DEFAULT})
+
+if(BUILD_CARBONUI_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
 

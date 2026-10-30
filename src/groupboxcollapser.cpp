@@ -1,18 +1,41 @@
-﻿/*
+/*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/**
+ * @file  groupboxcollapser.cpp
+ * @brief QGroupBoxCollapser 的实现：结构搬迁、标题同步与折叠动画。
+ * @author heqingrui
+ * @date  2026-10-30
+ * @version 1.0.0
+ * @ingroup carbonui
+ *
+ * @details
+ * 本文件实现 groupboxcollapser.h 声明的全部成员。公开接口的参数与返回值语义
+ * 写在头文件里，这里只记录实现层面的约定：
+ * - 安装流程会就地改写分组框结构，因此**必须在调用方填充完内容后**再调用
+ *   installIntoGroupBox()，否则后加入的控件会挂到外层布局上；
+ * - 折叠用 `maximumHeight` 属性动画实现：折叠结束时隐藏内容区并把最大高度
+ *   重置为 QWIDGETSIZE_MAX，展开结束时同样重置，保证下一次布局能拿到自然高度；
+ * - 标题同步走事件过滤器，因此 `groupBox->setTitle()` 之后不需要额外通知。
+ *
+ * 线程约定：只允许在 GUI 主线程调用（直接操作 QWidget）。
+ */
+
 #include "groupboxcollapser.h"
 #include <QtWidgets/QBoxLayout>
 #include <QtWidgets/QGroupBox>
+#include <QtWidgets/QLayout>
 #include <QtWidgets/QToolButton>
 #include <QtWidgets/QStyle>
 #include <QtCore/QVariant>
 #include <QtCore/QEvent>
 #include <QtCore/QPropertyAnimation>
 
+// 完整文档在 groupboxcollapser.h，这里不重复 @param/@return，只记录实现顺序。
+// 先改样式表，再建控制器（结构搬迁在构造函数里完成），最后按需收起。
 QGroupBoxCollapser *QGroupBoxCollapser::installIntoGroupBox(QGroupBox *groupBox, QWidget *cornerWidget, bool expanded)
 {
     groupBox->setStyleSheet(
@@ -32,6 +55,24 @@ QGroupBoxCollapser *QGroupBoxCollapser::installIntoGroupBox(QGroupBox *groupBox,
     return p;
 }
 
+void QGroupBoxCollapser::addWidget(QWidget *widget)
+{
+    if (!widget || !m_contentArea)
+    {
+        return;
+    }
+
+    if (QLayout *layout = m_contentArea->layout())
+    {
+        layout->addWidget(widget);
+        return;
+    }
+
+    // 没有布局时退化为"直接挂在内容区上"，由控件自身几何决定位置。
+    widget->setParent(m_contentArea);
+}
+
+// 内容区在构造函数里接管调用方原有布局；归档文档见 groupboxcollapser.h。
 QGroupBoxCollapser::QGroupBoxCollapser(QGroupBox *groupBox, QWidget *cornerWidget)
     : QObject(groupBox), m_groupBox(groupBox), m_titleWidget(nullptr), m_toggleButton(nullptr),
       m_contentArea(nullptr), m_animation(nullptr), m_collapsing(false)
@@ -40,6 +81,7 @@ QGroupBoxCollapser::QGroupBoxCollapser(QGroupBox *groupBox, QWidget *cornerWidge
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
+    // 内容区接管调用方原有布局，后续所有子控件都挂在这里，折叠时整体隐藏。
     m_contentArea = new QWidget(groupBox);
     m_contentArea->setObjectName("QGroupBoxBody");
     m_contentArea->setLayout(groupBox->layout());

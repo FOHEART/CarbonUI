@@ -61,6 +61,12 @@ build.ninja
 compile_commands.json
 *.dir
 
+# Generated Doxygen output (docs/html) and its warning log is already *.log
+/docs/
+
+# Test / instrumentation build trees
+build-*/
+
 # Archives
 *.zip
 *.tar

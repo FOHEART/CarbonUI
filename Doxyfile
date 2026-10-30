@@ -1,0 +1,61 @@
+# Doxyfile for CarbonUI
+#
+# 只保留与"注释规范落地"相关的关键项，未列出的选项走 doxygen 默认值。
+# 用法（Windows，doxygen 1.11.0）：
+#   D:\autotools\doxygen-1.11.0\doxygen.exe Doxyfile
+# 验收：docs\doxygen_warnings.log 必须为空，产物在 docs\html\index.html。
+#
+# 升级 doxygen 大版本后执行 `doxygen -u Doxyfile` 让选项名跟上新版本。
+
+# ---- 项目信息 ----
+PROJECT_NAME           = "CarbonUI"
+PROJECT_BRIEF          = "Qt 5 Widgets 的暗色样式助手与可折叠分组框"
+PROJECT_NUMBER         = "1.0.0"
+OUTPUT_DIRECTORY       = docs
+OUTPUT_LANGUAGE        = Chinese
+INPUT_ENCODING         = UTF-8
+
+# ---- 输入 ----
+INPUT                  = include src tests README.md
+FILE_PATTERNS          = *.h *.hpp *.c *.cpp *.cc
+RECURSIVE              = YES
+EXCLUDE                = build build-test out docs .git
+USE_MDFILE_AS_MAINPAGE = README.md
+
+# ---- 提取策略 ----
+# EXTRACT_ALL 必须为 NO，否则会连带关闭 WARN_IF_UNDOCUMENTED，等于放弃注释检查。
+EXTRACT_ALL            = NO
+EXTRACT_STATIC         = YES
+EXTRACT_PRIVATE        = YES
+EXTRACT_LOCAL_CLASSES  = YES
+HIDE_UNDOC_MEMBERS     = NO
+SOURCE_BROWSER         = YES
+
+# 预处理器：保持默认（不做宏展开）。`MACRO_EXPANSION=YES` 会把用例体里的
+# EXPECT_xxx(...) 语句误解析成函数声明，反而制造几百条噪声告警。
+ENABLE_PREPROCESSING   = YES
+
+# 导出宏在文档里没有意义，预定义为空以免污染签名。
+PREDEFINED             = CARBONUI_DLL_API= Q_OBJECT= Q_UNUSED(x)=
+
+# GoogleTest 的 TEST()/TEST_F() 会被当成普通函数声明解析，排除这两个符号，
+# 让用例只以"Suite.Behavior_Condition"的文件级说明出现在文档里。
+EXCLUDE_SYMBOLS        = TEST TEST_F
+
+# ---- HTML 输出 ----
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_COLORSTYLE        = TOGGLE
+GENERATE_TREEVIEW      = YES
+SEARCHENGINE           = YES
+GENERATE_LATEX         = NO
+USE_MATHJAX            = YES
+HAVE_DOT               = NO
+
+# ---- 告警（规范落地的关键）----
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = YES
+WARN_LOGFILE           = doxygen_warnings.log
+# CI 上打开：任何告警都会让 doxygen 以非 0 退出码结束。
+# WARN_AS_ERROR        = YES
