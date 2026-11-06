@@ -29,12 +29,17 @@ if (-not $Version) {
 if (-not $Version) { $Version = '0.0.0' }
 
 # ---- 输出与 stage 目录 ------------------------------------------------------
-if (-not $OutputDir) { $OutputDir = Join-Path $repoRoot 'out\pack' }
+if (-not $OutputDir) { $OutputDir = Join-Path $repoRoot 'out/pack' }
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 $topDirName = "CarbonUI_v$Version"
-# stage 必须放在源码树之外（%TEMP%），否则输出目录在输入目录内会引发 robocopy 自递归
-$stageParent = Join-Path $env:TEMP "carbonui_pack_stage_$PID"
+# stage 必须放在源码树之外（临时目录），否则输出目录在输入目录内会引发 robocopy 自递归。
+# 临时目录必须跨平台取：Linux 上 $env:TEMP 为空（是 TMPDIR），直接 Join-Path 会因 Path 为 null 抛错。
+$tempRoot = $env:TEMP
+if (-not $tempRoot) { $tempRoot = $env:TMPDIR }
+if (-not $tempRoot) { $tempRoot = [System.IO.Path]::GetTempPath() }
+if (-not $tempRoot) { throw '无法确定临时目录（TEMP/TMPDIR 均为空）' }
+$stageParent = Join-Path $tempRoot "carbonui_pack_stage_$PID"
 $stageDir = Join-Path $stageParent $topDirName
 if (Test-Path -LiteralPath $stageParent) { Remove-Item -LiteralPath $stageParent -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
@@ -52,8 +57,9 @@ $excludeFiles = @(
     '*.user', '*.suo', '*.pdb', '*.bak', '*.tmp', '*.swp',
     'Thumbs.db', '.DS_Store', '~$*'
 )
-# 内部脚本不进客户包（git_pull_latest.bat 内容含 git 命令，会被泄漏校验拦截）
-$excludeAbsolute = @((Join-Path $repoRoot 'scripts\git_pull_latest.bat'))
+# 内部脚本不进客户包（git_pull_latest.bat 内容含 git 命令，会被泄漏校验拦截）。
+# 用 / 分隔：Windows 与 Linux 上 Join-Path 都能得到正确路径（反斜杠在 Linux 上是字面字符，会匹配失败）
+$excludeAbsolute = @((Join-Path $repoRoot 'scripts/git_pull_latest.bat'))
 
 # ---- 复制：优先 robocopy（Windows），否则自写复制 ---------------------------
 function Copy-TreeWithExcludes {
