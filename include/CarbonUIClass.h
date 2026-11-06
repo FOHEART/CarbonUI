@@ -93,8 +93,8 @@ public:
      *
      * @param[in,out] rb       目标单选按钮，**可为 NULL**，为 NULL 时直接返回。
      * @param[in]     shape    外形，取值必须是 ::CarbonUIClass::RadioShape 中的枚举值；
-     *                         传入其他值按 ::CarbonUIClass::Radio_FourRound 处理。
-     *                         默认 ::CarbonUIClass::Radio_FourRound。
+     *                         传入其他值按 `::CarbonUIClass::Radio_FourRound` 处理。
+     *                         默认 `::CarbonUIClass::Radio_FourRound`。
      * @param[in]     minWidth 最小宽度，单位像素，取值 [0, INT_MAX]，
      *                         原样写入 QSS 的 `min-width`；默认 28。
      *                         负值不会被拒绝，但会被 Qt 当作无效长度忽略。
@@ -159,7 +159,7 @@ public:
      * @param[in,out] btn   目标按钮，**可为 NULL**，为 NULL 时直接返回。
      * @param[in]     shape 外形，取值必须是 ::CarbonUIClass::ButtonShape 中的枚举值；
      *                      传入其他值时不设置任何圆角（等效于 0px）。
-     *                      默认 ::CarbonUIClass::Shape_RoundAll。
+     *                      默认 `::CarbonUIClass::Shape_RoundAll`。
      */
     static void applyButtonStyle(QPushButton* btn, ButtonShape shape = Shape_RoundAll);
 

@@ -54,11 +54,26 @@ jobs:
           fi
           echo "[OK] gen_docs.bat 缺依赖分支 rc=2"
 
-      - name: 安装 doxygen 与 OpenGL/XCB 依赖
+      # doxygen 固定版本：ubuntu-24.04 的 apt 包是 1.9.8，会对 Doxyfile 的
+      # OUTPUT_LANGUAGE = Chinese 报 "selected output language chinese has not been
+      # updated"，且对 `#symbol` 后紧跟中文标点的写法比新版更严格；WARN_AS_ERROR 下
+      # 门禁结果会随发行版包版本漂移。固定官方二进制，本地/CI 结论一致。
+      - name: 安装 doxygen 1.15.0（固定版本）
+        shell: bash
+        run: |
+          DOXYGEN_VER=1.15.0
+          DOXYGEN_TAG="Release_${DOXYGEN_VER//./_}"
+          curl -fsSL -o /tmp/doxygen.tar.gz \
+            "https://github.com/doxygen/doxygen/releases/download/${DOXYGEN_TAG}/doxygen-${DOXYGEN_VER}.linux.bin.tar.gz"
+          sudo tar -xzf /tmp/doxygen.tar.gz -C /opt
+          sudo ln -sf "/opt/doxygen-${DOXYGEN_VER}/bin/doxygen" /usr/local/bin/doxygen
+          doxygen --version
+
+      - name: 安装 OpenGL/XCB 依赖
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends doxygen \
+          sudo apt-get install -y --no-install-recommends \
             libgl1-mesa-dev \
             mesa-common-dev \
             libxkbcommon-x11-0 \

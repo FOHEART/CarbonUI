@@ -33,7 +33,7 @@
  *
  * @param[in] argc 命令行参数个数，由运行器提供，取值 [1, +∞)。
  * @param[in] argv 命令行参数数组，不可为 NULL；`--gtest_*` 会先被
- *                 ::testing::InitGoogleTest 摘除，剩余参数交给 QApplication。
+ *                 `::testing::InitGoogleTest` 摘除，剩余参数交给 QApplication。
  * @return 用例执行结果，0 表示全部通过，非 0 表示存在失败用例。
  */
 int main(int argc, char** argv)
