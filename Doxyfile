@@ -19,7 +19,7 @@ OUTPUT_LANGUAGE        = Chinese
 INPUT_ENCODING         = UTF-8
 
 # ---- 输入 ----
-INPUT                  = include src tests README.md
+INPUT                  = include src cli tests README.md
 FILE_PATTERNS          = *.h *.hpp *.c *.cpp *.cc
 RECURSIVE              = YES
 EXCLUDE                = build build-test out docs .git

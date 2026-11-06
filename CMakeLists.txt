@@ -147,6 +147,21 @@ endif()
 # Optional: export a namespace alias for consumers that expect CarbonUI::CarbonUI
 add_library(CarbonUI::CarbonUI ALIAS ${PROJECT_NAME})
 
+# ########################  carbonui_cli (CLI-Anything)  ####################
+# 本库没有 GUI 主程序，CLI 走"独立薄可执行文件"形态：只做参数解析 + 调样式
+# API + 输出统一信封。独立检出的仓库默认构建（测试与本地验证都要用），
+# 被 add_subdirectory/CPM 引入的消费者默认不构建，可用 -DBUILD_CARBONUI_CLI=ON 打开。
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(CARBONUI_CLI_DEFAULT ON)
+else()
+  set(CARBONUI_CLI_DEFAULT OFF)
+endif()
+option(BUILD_CARBONUI_CLI "Build the carbonui_cli command line tool" ${CARBONUI_CLI_DEFAULT})
+
+if(BUILD_CARBONUI_CLI)
+  add_subdirectory(cli)
+endif()
+
 # ########################  unit tests (TDD)  #########################
 # Standalone checkouts default to ON so the red/green loop is one command away;
 # consumers pulling CarbonUI in via add_subdirectory/CPM default to OFF and can

@@ -88,3 +88,6 @@ __pycache__/
 *.swp
 
 # If you keep generated headers or other generated source files in repo, remove them from this file accordingly.
+
+.pytest_cache/
+*.egg-info/

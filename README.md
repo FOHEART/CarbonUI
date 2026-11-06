@@ -51,9 +51,31 @@ Notes:
 
 - `include/` — public headers
 - `src/` — source files
+- `cli/` — `carbonui_cli` command line tool (renders widget screenshots, exports QSS)
+- `agent-harness/` — Python harness for the CLI (CLI-Anything style, see `SKILL.md`)
 - `tests/` — `unit/` state suites, `visual/` render-evidence suite, `support/` shared helpers
 - `docs/` — generated Doxygen HTML (not committed; created by `doxygen Doxyfile`)
 - `lib/` — configured output directory for built artifacts (`lib/Debug`, `lib/Release`)
+
+## CLI
+
+A standalone command line tool `carbonui_cli` ships with the repository
+(disabled when CarbonUI is consumed via `add_subdirectory`/CPM; enable with
+`-DBUILD_CARBONUI_CLI=ON`):
+
+```sh
+carbonui_cli --json info
+carbonui_cli snapshot --widget button --shape rect --state disabled --out shot.png
+carbonui_cli gallery --out preview.png
+carbonui_cli qss --all
+```
+
+All commands print a unified JSON envelope (`{"ok","code","message","data"}`)
+with `--json`, and exit 0/1 (details in the envelope `code` field). Without
+arguments it starts a REPL. Rendering is headless (`QWidget::grab()`, no
+window ever shown) and works in CI. For the Agent-facing interface contract —
+including the error-code table and a Python harness — see the repository root
+`SKILL.md` file.
 
 ## Usage
 

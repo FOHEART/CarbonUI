@@ -23,8 +23,8 @@ echo "[1/3] configure: $BUILD"
 cmake -S "$ROOT" -B "$BUILD" -DCMAKE_BUILD_TYPE="$CONFIG" \
       ${QTDIR:+-DCMAKE_PREFIX_PATH="$QTDIR"} || { echo "[ERROR] cmake configure failed"; exit 1; }
 
-echo "[2/3] build: carbonui_tests carbonui_visual_tests [$CONFIG]"
-cmake --build "$BUILD" --target carbonui_tests carbonui_visual_tests -j"$JOBS" || { echo "[ERROR] build failed"; exit 1; }
+echo "[2/3] build: carbonui_tests carbonui_visual_tests carbonui_cli [$CONFIG]"
+cmake --build "$BUILD" --target carbonui_tests carbonui_visual_tests carbonui_cli -j"$JOBS" || { echo "[ERROR] build failed"; exit 1; }
 
 echo "[3/3] ctest [$CONFIG]"
 cd "$BUILD" || exit 1

@@ -90,8 +90,17 @@ add_executable(carbonui_tests
     unit/carbonui_tree_test.cpp
     unit/carbonui_radio_test.cpp
     unit/groupboxcollapser_test.cpp
+    unit/carbonui_cli_smoke_test.cpp
 )
 carbonui_configure_test_target(carbonui_tests "Unit." offscreen)
+
+# CLI 冒烟用例要真启动 carbonui_cli：把可执行文件路径以编译期宏注入，
+# 并建立构建依赖，避免"测试先跑、CLI 还没链接"的偶发空跑。
+if(TARGET carbonui_cli)
+    target_compile_definitions(carbonui_tests PRIVATE
+        CARBONUI_CLI_EXE="$<TARGET_FILE:carbonui_cli>")
+    add_dependencies(carbonui_tests carbonui_cli)
+endif()
 
 # ------------------------------------------------------------- render evidence
 add_executable(carbonui_visual_tests

@@ -57,12 +57,13 @@ $excludeDirs = @(
     '.git', '.github', '.vs', '.vscode', '.idea',
     'out', 'build', 'build-test', 'docs', 'lib',
     'cmake-build-debug', 'cmake-build-release',
-    'Testing', 'CMakeFiles', '__pycache__', 'venv', 'ui-artifacts'
+    'Testing', 'CMakeFiles', '__pycache__', '.pytest_cache', 'venv', 'ui-artifacts'
 )
 $excludeFiles = @(
     '.git*', '.gitignore', '.gitattributes', '.gitmodules',
     '*.log', '*.zip', '*.7z', '*.tar', '*.tar.gz', '*.tgz',
     '*.user', '*.suo', '*.pdb', '*.bak', '*.tmp', '*.swp',
+    '*.pyc', '*.egg-info',
     'Thumbs.db', '.DS_Store', '~$*'
 )
 # 内部脚本不进客户包（git_pull_latest.bat 内容含 git 命令，会被泄漏校验拦截）。

@@ -58,6 +58,10 @@ if "!HDR_COUNT!"=="0" (
     echo [WARN] 未汇总到头文件，请检查 include\ 目录。
     exit /b 1
 )
+
+REM CLI 与 agent-harness：与库产物同目录，harness 靠相对位置自动定位 exe
+call "%~dp0sync_agent_harness.bat" %CONFIG% "%INSTALL%"
+if errorlevel 1 exit /b 1
 exit /b 0
 
 #__SH__
@@ -106,4 +110,7 @@ fi
 if [ "$count" -gt 0 ]; then
     echo "     运行链接了 CarbonUI 动态库的程序前可执行：export LD_LIBRARY_PATH=\"$INSTALL/lib:\$LD_LIBRARY_PATH\""
 fi
+
+# CLI 与 agent-harness：与库产物同目录，harness 靠相对位置自动定位 exe
+sh "$(dirname "$0")/sync_agent_harness.bat" "$CONFIG" "$INSTALL" || exit 1
 exit 0

@@ -70,8 +70,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [2/3] build: carbonui_tests carbonui_visual_tests [%CONFIG%]
-cmake --build "%BUILD%" --config %CONFIG% --target carbonui_tests carbonui_visual_tests
+echo [2/3] build: carbonui_tests carbonui_visual_tests carbonui_cli [%CONFIG%]
+cmake --build "%BUILD%" --config %CONFIG% --target carbonui_tests carbonui_visual_tests carbonui_cli
 if errorlevel 1 (
     echo [ERROR] build failed
     exit /b 1
