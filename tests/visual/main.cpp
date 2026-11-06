@@ -22,7 +22,7 @@
  * 截图基线还要求"文字字形可复现"：Qt 默认使用系统 UI 字体，中文 Windows 上是
  * Microsoft YaHei UI、CI 英文镜像是 Segoe UI，同一句话的像素完全不同，基线跨机器
  * 永远对不上。因此入口统一加载仓库内置的
- * `Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf` 并设为默认字体（见
+ * `src/Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf` 并设为默认字体（见
  * `pinReproducibleFont()`）——本地与 CI 渲染同一份 TTF，字形度量完全一致。
  *
  * 线程约定：与所有 Qt Widgets 用例一样，只在主线程执行。
@@ -46,7 +46,7 @@ namespace
  * @brief 固定 QApplication 的默认字体族与字号，让文字渲染跨机器可复现。
  *
  * @details
- * 统一加载仓库内置的 `Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf`
+ * 统一加载仓库内置的 `src/Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf`
  * （编译期宏 `CARBONUI_TEST_BUNDLED_FONT` 给出绝对路径）后设为默认字体：
  * 本地与 CI 用的是同一份 TTF，字形轮廓与度量完全一致，不再受系统 UI 字体
  * （中文 Windows 的雅黑 / CI 英文镜像的 Segoe UI）影响。TTF 加载失败时

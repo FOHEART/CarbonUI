@@ -1,6 +1,8 @@
 <RCC>
+    <!-- 资源文件现位于 src/Resources；用 alias 保持既有资源路径
+         （:/img/Resources/img/...）不变，库内样式表与用例无需改动。 -->
     <qresource prefix="/img">
-        <file>Resources/img/arrow_down.png</file>
-        <file>Resources/img/arrow_right.png</file>
+        <file alias="Resources/img/arrow_down.png">src/Resources/img/arrow_down.png</file>
+        <file alias="Resources/img/arrow_right.png">src/Resources/img/arrow_right.png</file>
     </qresource>
 </RCC>
