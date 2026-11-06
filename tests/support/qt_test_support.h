@@ -3,7 +3,7 @@
  * @brief 单元测试共用的 Qt/GoogleTest 辅助断言与事件泵。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

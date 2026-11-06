@@ -3,7 +3,7 @@
  * @brief `CarbonUIClass::applyCheckStyle()` 的行为用例。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

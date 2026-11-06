@@ -3,7 +3,7 @@
  * @brief 渲染证据测试入口：默认切到平台原生后端，以便文字也能真实绘制。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

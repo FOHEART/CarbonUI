@@ -1,0 +1,41 @@
+// ============================================================================
+// version.rc.in -- Windows 版本资源模板（CMake configure_file 填充）
+// 版本号唯一来源是 include/CarbonUIVersion.h，由 CMakeLists.txt 在配置期解析
+// 出 CARBONUI_VERSION_MAJOR/MINOR/PATCH 后填充本模板；改版本只改该头文件。
+// 仅 BUILD_CARBONUI_SHARED=ON 且 WIN32 时加入目标，编译进 dll 的文件属性。
+// ============================================================================
+
+#include <winver.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    @CARBONUI_VERSION_MAJOR@,@CARBONUI_VERSION_MINOR@,@CARBONUI_VERSION_PATCH@,0
+ PRODUCTVERSION @CARBONUI_VERSION_MAJOR@,@CARBONUI_VERSION_MINOR@,@CARBONUI_VERSION_PATCH@,0
+ FILEFLAGSMASK  0x3fL
+#ifdef _DEBUG
+ FILEFLAGS      VS_FF_DEBUG
+#else
+ FILEFLAGS      0x0L
+#endif
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE       VFT_DLL
+ FILESUBTYPE    0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "CarbonUI"
+            VALUE "FileDescription",  "CarbonUI - Qt Widgets dark style helper library"
+            VALUE "FileVersion",      "@CARBONUI_VERSION@.0"
+            VALUE "InternalName",     "CarbonUI"
+            VALUE "LegalCopyright",   "Copyright (C) 2026 CarbonUI contributors"
+            VALUE "OriginalFilename", "CarbonUI.dll"
+            VALUE "ProductName",      "CarbonUI"
+            VALUE "ProductVersion",   "@CARBONUI_VERSION@.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

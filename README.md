@@ -70,6 +70,7 @@ Include headers with:
 
 ```cpp
 #include <CarbonUI.h>
+#include <CarbonUIVersion.h>
 #include <modifyui.h>
 #include <groupboxcollapser.h>
 ```
@@ -104,12 +105,28 @@ Notes:
 - Adding a case: create/extend a suite in `tests/unit/` (state) or `tests/visual/` (pixels), then add the file to `tests/CMakeLists.txt`. Name cases `TEST(被测单元, 行为_条件)` and assert observable results instead of implementation details.
 - Test-authoring traps worth remembering: sibling `QRadioButton`s are **auto-exclusive** by default (a segmented bar needs `setAutoExclusive(false)`); QSS `min-width` **grows a widget past `setGeometry()`**, so derive sample points from `minimumSizeHint()`; glyph antialiasing tints centre samples, so sample in padding rather than on the caption.
 
+## Versioning & Release
+
+The **single source of truth** for the version is `include/CarbonUIVersion.h` (`CARBONUI_VERSION_MAJOR/MINOR/PATCH`, currently `0.2.1`). Bump the version by editing that header only — everything else follows automatically:
+
+| Consumer | Mechanism |
+| --- | --- |
+| DLL file properties (FileVersion / ProductVersion) | CMake parses the header and fills `cmake/version.rc.in` (Windows shared builds) |
+| `libCarbonUI.so.X.Y.Z` file name | CMake target `VERSION` / `SOVERSION` |
+| Doxygen `PROJECT_NUMBER` | `scripts/gen_docs.bat` resolves the header and injects `$(CARBONUI_VERSION)` |
+| Source package name `CarbonUI_v<ver>.zip` | `tools/package_source.ps1` reads the header first (Doxyfile only as legacy fallback) |
+| git tag / GitHub Release | `scripts/release.bat` tags `v<ver>` and pushes; `.github/workflows/release.yml` hard-fails unless the tag equals the header version, then publishes assets named `CarbonUI_v<ver>*.zip` |
+
+Per-file Doxygen `@version` tags intentionally do not carry numbers — they point at `include/CarbonUIVersion.h`, so a release bump touches the header alone.
+
 ## Documentation
 
 Every header/source file carries Doxygen comments (file header, `@brief`/`@param`/`@return` for each function, per-value enum docs). Generate the HTML docs with:
 
 ```bat
-D:\autotools\doxygen-1.11.0\doxygen.exe Doxyfile
+scripts\gen_docs.bat
+:: (recommended: it injects CARBONUI_VERSION from include/CarbonUIVersion.h into the Doxyfile)
+:: direct invocation also works: D:\autotools\doxygen-1.11.0\doxygen.exe Doxyfile
 :: output: docs\html\index.html   warnings: doxygen_warnings.log (must stay empty)
 ```
 

@@ -10,7 +10,10 @@
 # ---- 项目信息 ----
 PROJECT_NAME           = "CarbonUI"
 PROJECT_BRIEF          = "Qt 5 Widgets 的暗色样式助手与可折叠分组框"
-PROJECT_NUMBER         = "1.0.0"
+# 版本号唯一来源是 include/CarbonUIVersion.h；$(CARBONUI_VERSION) 由
+# scripts\gen_docs.bat（cmd/sh 两分支）从该头文件解析后经环境变量注入。
+# 直接运行 doxygen 且未设置该环境变量时，此处展开为空（不阻塞文档生成）。
+PROJECT_NUMBER         = "$(CARBONUI_VERSION)"
 OUTPUT_DIRECTORY       = docs
 OUTPUT_LANGUAGE        = Chinese
 INPUT_ENCODING         = UTF-8

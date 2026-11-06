@@ -15,6 +15,13 @@ if not exist "%DOXYGEN%" (
     exit /b 2
 )
 
+REM 版本号唯一来源 include\CarbonUIVersion.h -> Doxyfile 的 $(CARBONUI_VERSION)
+if not defined CARBONUI_VERSION (
+    for /f "tokens=3" %%V in ('findstr /b /c:"#define CARBONUI_VERSION " "%ROOT%\include\CarbonUIVersion.h"') do set "CARBONUI_VERSION=%%~V"
+)
+if not defined CARBONUI_VERSION set "CARBONUI_VERSION=0.0.0"
+echo [INFO] CARBONUI_VERSION=%CARBONUI_VERSION%
+
 pushd "%ROOT%"
 REM 告警日志按运行 doxygen 时的当前目录解析（WARN_LOGFILE 相对路径），必须先到工程根
 if not exist "out\doxygen" md "out\doxygen" 2>nul
@@ -53,6 +60,12 @@ if ! command -v "$DOXYGEN_BIN" >/dev/null 2>&1; then
     echo "        请安装 doxygen（如 sudo apt install doxygen），或用 DOXYGEN=/path/to/doxygen 指定。" >&2
     exit 2
 fi
+
+# 版本号唯一来源 include/CarbonUIVersion.h -> Doxyfile 的 $(CARBONUI_VERSION)
+CARBONUI_VERSION=$(sed -n 's/^#define CARBONUI_VERSION "\(.*\)"/\1/p' "$ROOT/include/CarbonUIVersion.h" | head -n 1)
+: "${CARBONUI_VERSION:=0.0.0}"
+export CARBONUI_VERSION
+echo "[INFO] CARBONUI_VERSION=$CARBONUI_VERSION"
 
 mkdir -p out/doxygen
 if ! "$DOXYGEN_BIN" Doxyfile; then

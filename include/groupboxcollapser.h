@@ -9,7 +9,7 @@
  * @brief 把普通 QGroupBox 改造为可动画折叠面板的控制器。
  * @author heqingrui
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui
  *
  * @details

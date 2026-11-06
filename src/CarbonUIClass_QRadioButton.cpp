@@ -9,7 +9,7 @@
  * @brief CarbonUIClass 中单选按钮样式助手及其内部辅助件的实现。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui
  *
  * @details

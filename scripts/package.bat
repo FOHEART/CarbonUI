@@ -3,7 +3,7 @@
 chcp 65001 >nul
 REM  chcp 必须在任何多字节内容之前。
 REM  package.bat -- 打可分发源码 ZIP（打包逻辑唯一实现在 tools\package_source.ps1）
-REM  用法：scripts\package.bat [版本号]（缺省从 Doxyfile 的 PROJECT_NUMBER 读取）
+REM  用法：scripts\package.bat [版本号]（缺省从 include\CarbonUIVersion.h 解析）
 setlocal
 for %%I in ("%~dp0..") do set "ROOT=%%~fI"
 set "OUTDIR=%ROOT%\out\pack"

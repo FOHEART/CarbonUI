@@ -9,7 +9,7 @@
  * @brief 导出宏与模块分组定义。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  *
  * @details
  * 本头文件只做预处理层面的事情：把编译期开关 `CARBONUI_DLL_EXPORT`（构建 DLL

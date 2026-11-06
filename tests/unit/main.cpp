@@ -3,7 +3,7 @@
  * @brief GoogleTest 入口：先初始化 gtest，再创建 QApplication。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

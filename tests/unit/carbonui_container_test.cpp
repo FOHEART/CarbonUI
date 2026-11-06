@@ -4,7 +4,7 @@
  *        下拉框 / 状态栏 / 递归标签 / 全局 Tooltip）。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

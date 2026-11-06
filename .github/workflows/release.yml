@@ -1,0 +1,119 @@
+# GitHub Release 流程：tag 触发，版本号唯一来源 = include/CarbonUIVersion.h
+#
+# 用法（本地）：scripts\release.bat —— 从 CarbonUIVersion.h 解析版本号，
+# 创建 annotated tag v<版本> 并推送；本 workflow 在 tag push（v*）时触发。
+#
+# 硬约束：推送的 tag 必须与 CarbonUIVersion.h 的 CARBONUI_VERSION 一致
+# （即 v<版本>），不一致直接失败；Release 与资产命名统一用头文件版本：
+#   - CarbonUI_v<版本>.zip             源码分发包（scripts\package.bat）
+#   - CarbonUI_v<版本>-windows-x64.zip Windows 二进制包（dll/lib/头文件）
+
+name: Release (tag-driven)
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 版本对齐门禁：tag 必须等于 CarbonUIVersion.h 的 v<版本>
+      - name: 校验 tag 与 CarbonUIVersion.h 一致
+        shell: bash
+        run: |
+          VER=$(sed -n 's/^#define CARBONUI_VERSION "\(.*\)"/\1/p' include/CarbonUIVersion.h)
+          if [ -z "$VER" ]; then
+            echo "::error::无法从 include/CarbonUIVersion.h 解析 CARBONUI_VERSION"
+            exit 1
+          fi
+          EXPECTED="v${VER}"
+          echo "CarbonUIVersion.h -> ${EXPECTED}, pushed tag -> ${GITHUB_REF_NAME}"
+          if [ "${GITHUB_REF_NAME}" != "${EXPECTED}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} 与 CarbonUIVersion.h 的 ${EXPECTED} 不一致"
+            exit 1
+          fi
+          echo "CARBONUI_VERSION=${VER}" >> "$GITHUB_ENV"
+
+      - name: Set Qt cache dir (Windows)
+        shell: bash
+        run: |
+          echo "QT_CACHE_DIR=${{ github.workspace }}\\.qt" >> "$GITHUB_ENV"
+          echo "QT_ARCH=win64_msvc2019_64" >> "$GITHUB_ENV"
+
+      - name: Install Qt 5.15.2（带缓存）
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: 'win64_msvc2019_64'
+          dir: ${{ env.QT_CACHE_DIR }}
+          setup-python: false
+          install-deps: true
+          cache: true
+
+      - name: Detect Qt CMake package
+        shell: bash
+        run: |
+          QT5_CONFIG=$(find "${QT_CACHE_DIR}" -type f -name Qt5Config.cmake -print -quit)
+          if [ -z "${QT5_CONFIG}" ]; then
+            echo "::error::Qt5Config.cmake not found in cache dir"
+            exit 1
+          fi
+          QT5_CMAKE_DIR=$(dirname "${QT5_CONFIG}")
+          QT_PREFIX=$(cd "${QT5_CMAKE_DIR}/../.." && pwd)
+          echo "Qt5_DIR=${QT5_CMAKE_DIR}" >> "$GITHUB_ENV"
+          echo "CMAKE_PREFIX_PATH=${QT_PREFIX}" >> "$GITHUB_ENV"
+
+      - name: Build (Release, shared)
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_CARBONUI_SHARED=ON
+          -S ${{ github.workspace }}
+          && cmake --build build --config Release
+
+      - name: 源码分发包（命名 CarbonUI_v<版本>.zip）
+        shell: cmd
+        run: |
+          cmd /d /c scripts\package.bat
+          if errorlevel 1 exit /b 1
+          dir /b out\pack\CarbonUI_v%CARBONUI_VERSION%.zip
+          if errorlevel 1 (
+            echo ::error::源码分发包 CarbonUI_v%CARBONUI_VERSION%.zip 缺失
+            exit /b 1
+          )
+          verify >nul
+
+      - name: Windows 二进制包（命名 CarbonUI_v<版本>-windows-x64.zip）
+        shell: pwsh
+        run: |
+          $ver = $env:CARBONUI_VERSION
+          $stage = "out/bin-stage/CarbonUI_v$ver"
+          New-Item -ItemType Directory -Force -Path "$stage/lib", "$stage/include" | Out-Null
+          Copy-Item build/Release/*.dll, build/Release/*.lib "$stage/lib/" -ErrorAction SilentlyContinue
+          Copy-Item include/*.h "$stage/include/"
+          $zip = "out/pack/CarbonUI_v$ver-windows-x64.zip"
+          Compress-Archive -Path "$stage/*" -DestinationPath $zip -Force
+          Get-ChildItem out/pack | Select-Object Name, Length
+          if (-not (Test-Path $zip)) { Write-Error "二进制包 $zip 缺失"; exit 1 }
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: CarbonUI v${{ env.CARBONUI_VERSION }}
+          body: |
+            CarbonUI v${{ env.CARBONUI_VERSION }}（版本号来源：include/CarbonUIVersion.h）
+          files: |
+            out/pack/CarbonUI_v${{ env.CARBONUI_VERSION }}.zip
+            out/pack/CarbonUI_v${{ env.CARBONUI_VERSION }}-windows-x64.zip

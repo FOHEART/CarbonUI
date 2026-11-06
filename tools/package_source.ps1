@@ -18,7 +18,15 @@ $ErrorActionPreference = 'Stop'
 # ---- 工程根 = 本脚本所在目录的上一级 ---------------------------------------
 $repoRoot = Split-Path -Parent $PSScriptRoot
 
-# ---- 版本：参数 > Doxyfile 的 PROJECT_NUMBER > 0.0.0 ------------------------
+# ---- 版本：参数 > include/CarbonUIVersion.h > Doxyfile PROJECT_NUMBER > 0.0.0
+# 版本号唯一来源是 include/CarbonUIVersion.h；Doxyfile 仅作旧版兼容回退。
+if (-not $Version) {
+    $versionHeader = Join-Path $repoRoot 'include/CarbonUIVersion.h'
+    if (Test-Path -LiteralPath $versionHeader) {
+        $m = Select-String -LiteralPath $versionHeader -Pattern '^\s*#define\s+CARBONUI_VERSION\s+"([^"]+)"' | Select-Object -First 1
+        if ($m) { $Version = $m.Matches[0].Groups[1].Value.Trim() }
+    }
+}
 if (-not $Version) {
     $doxyfile = Join-Path $repoRoot 'Doxyfile'
     if (Test-Path -LiteralPath $doxyfile) {

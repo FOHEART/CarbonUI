@@ -9,7 +9,7 @@
  * @brief CarbonUIClass 中"通用控件"样式助手的实现。
  * @author CarbonUI
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui
  *
  * @details

@@ -3,7 +3,7 @@
  * @brief 截图基线辅助：把控件真实渲染成 PNG，与仓库里的基线图逐像素比对。
  * @author CarbonUI
  * @date  2026-11-06
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

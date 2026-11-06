@@ -9,7 +9,7 @@
  * @brief QGroupBoxCollapser 的实现：结构搬迁、标题同步与折叠动画。
  * @author heqingrui
  * @date  2026-10-30
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui
  *
  * @details

@@ -3,7 +3,7 @@
  * @brief 截图基线用例：每个界面抓整图，与仓库里的基线图比对，拦截整幅画面的 UI 回归。
  * @author CarbonUI
  * @date  2026-11-06
- * @version 1.0.0
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
  * @ingroup carbonui_tests
  *
  * @details

@@ -1,5 +1,24 @@
 cmake_minimum_required(VERSION 3.16)
-project(CarbonUI LANGUAGES CXX)
+
+# ########################  version (single source of truth)  ################
+# 版本号唯一来源是 include/CarbonUIVersion.h：升版只改该头文件，这里解析出
+# 三位数字供 project(VERSION)、目标 VERSION/SOVERSION 与 Windows DLL 版本
+# 资源（cmake/version.rc.in）使用。必须在 project() 之前读出。
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/include/CarbonUIVersion.h" _carbonui_version_h)
+string(REGEX MATCH "define[ \t]+CARBONUI_VERSION_MAJOR[ \t]+([0-9]+)" _carbonui_m "${_carbonui_version_h}")
+set(CARBONUI_VERSION_MAJOR "${CMAKE_MATCH_1}")
+string(REGEX MATCH "define[ \t]+CARBONUI_VERSION_MINOR[ \t]+([0-9]+)" _carbonui_m "${_carbonui_version_h}")
+set(CARBONUI_VERSION_MINOR "${CMAKE_MATCH_1}")
+string(REGEX MATCH "define[ \t]+CARBONUI_VERSION_PATCH[ \t]+([0-9]+)" _carbonui_m "${_carbonui_version_h}")
+set(CARBONUI_VERSION_PATCH "${CMAKE_MATCH_1}")
+if("${CARBONUI_VERSION_MAJOR}" STREQUAL "" OR "${CARBONUI_VERSION_MINOR}" STREQUAL "" OR "${CARBONUI_VERSION_PATCH}" STREQUAL "")
+  # 注意不能用 if(NOT VAR)：主版本号为 0 时 CMake 会把 0 当 false 常量误判
+  message(FATAL_ERROR "无法从 include/CarbonUIVersion.h 解析 CARBONUI_VERSION_MAJOR/MINOR/PATCH")
+endif()
+set(CARBONUI_VERSION "${CARBONUI_VERSION_MAJOR}.${CARBONUI_VERSION_MINOR}.${CARBONUI_VERSION_PATCH}")
+message(STATUS "CarbonUI version: ${CARBONUI_VERSION} (from include/CarbonUIVersion.h)")
+
+project(CarbonUI VERSION ${CARBONUI_VERSION} LANGUAGES CXX)
 
 
 set(CMAKE_CXX_STANDARD 11)
@@ -36,6 +55,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core Gui Widgets)
 # headers go into include/, sources into src/
 set(PROJECT_HEADERS
     include/carbonui_global.h
+    include/CarbonUIVersion.h
     include/CarbonUIClass.h
     include/groupboxcollapser.h
 )
@@ -85,6 +105,19 @@ else()
     ${MOC_SOURCES} ${UIC_SOURCES} ${RCC_SOURCES})
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
+
+# Windows DLL 版本属性：configure 填充 version.rc.in（FileVersion/ProductVersion），
+# 编译进 dll 的资源段，资源管理器可见。仅动态库需要，静态库无此产物。
+if(WIN32 AND BUILD_CARBONUI_SHARED)
+  configure_file(cmake/version.rc.in "${CMAKE_CURRENT_BINARY_DIR}/version.rc" @ONLY)
+  target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/version.rc")
+endif()
+
+# 动态库文件名带版本（libCarbonUI.so.0.2.1 / libCarbonUI.1.dylib）；
+# Win32 的 PE 头版本由上面的 version.rc 负责，VERSION 属性同时写入其 Unicode 元数据。
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    VERSION   ${CARBONUI_VERSION}
+    SOVERSION ${CARBONUI_VERSION_MAJOR})
 
 # Sources contain UTF-8 (Chinese) Doxygen comments; MSVC would otherwise decode
 # them with the system code page and emit C4819 / break the comment blocks.
