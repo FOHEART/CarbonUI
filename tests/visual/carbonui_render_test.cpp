@@ -128,15 +128,22 @@ TEST(RenderEvidence, ButtonTextIsReallyPainted)
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("03-button-with-text.png"));
 
+    // 纯 #ffffff 只在字形笔画完全覆盖某像素时才会出现；换字体或换光栅器后
+    // （内置 HarmonyOS Sans SC 在 FreeType 下），最亮的抗锯齿像素可能只有 250~254。
+    // 因此判"近白"（三通道均 >= 250）：仍能拦住"文字没画出来/颜色不对"，
+    // 又不会因为 1~2 级的抗锯齿差异误报。
     bool foundWhite = false;
     for (int y = 20; y < 52 && !foundWhite; ++y)
         for (int x = 20; x < 140; ++x)
-            if (image.pixelColor(x, y).name(QColor::HexRgb) == QStringLiteral("#ffffff"))
+        {
+            const QColor pixel = image.pixelColor(x, y);
+            if (pixel.red() >= 250 && pixel.green() >= 250 && pixel.blue() >= 250)
             {
                 foundWhite = true;
                 break;
             }
-    EXPECT_TRUE(foundWhite) << "styled button caption must be painted in #ffffff";
+        }
+    EXPECT_TRUE(foundWhite) << "styled button caption must be painted in near-#ffffff";
     EXPECT_GT(carbonui_test::distinctColourCount(image), 3)
         << "a button with a caption cannot be a flat single-colour rectangle";
 
