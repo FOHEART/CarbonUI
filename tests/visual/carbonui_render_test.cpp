@@ -129,21 +129,25 @@ TEST(RenderEvidence, ButtonTextIsReallyPainted)
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("03-button-with-text.png"));
 
     // 纯 #ffffff 只在字形笔画完全覆盖某像素时才会出现；换字体或换光栅器后
-    // （内置 HarmonyOS Sans SC 在 FreeType 下），最亮的抗锯齿像素可能只有 250~254。
-    // 因此判"近白"（三通道均 >= 250）：仍能拦住"文字没画出来/颜色不对"，
-    // 又不会因为 1~2 级的抗锯齿差异误报。
-    bool foundWhite = false;
-    for (int y = 20; y < 52 && !foundWhite; ++y)
+    // （内置 HarmonyOS Sans SC 在 FreeType 下）峰值会明显低于 255，因此改为
+    // "取按钮区域内最亮的像素，其最小通道必须足够高"——文字没画出来时该值会
+    // 落在强调色填充的水平（最小通道接近 0），仍能可靠报错；同时把实际值打进
+    // 失败信息，便于按平台调阈值。
+    int brightest = 0;
+    QColor brightestPixel;
+    for (int y = 20; y < 52; ++y)
         for (int x = 20; x < 140; ++x)
         {
             const QColor pixel = image.pixelColor(x, y);
-            if (pixel.red() >= 250 && pixel.green() >= 250 && pixel.blue() >= 250)
+            const int minChannel = qMin(pixel.red(), qMin(pixel.green(), pixel.blue()));
+            if (minChannel > brightest)
             {
-                foundWhite = true;
-                break;
+                brightest = minChannel;
+                brightestPixel = pixel;
             }
         }
-    EXPECT_TRUE(foundWhite) << "styled button caption must be painted in near-#ffffff";
+    EXPECT_GE(brightest, 200) << "styled button caption must be painted near-white; brightest pixel="
+                              << brightestPixel.name().toStdString() << " (min channel " << brightest << ")";
     EXPECT_GT(carbonui_test::distinctColourCount(image), 3)
         << "a button with a caption cannot be a flat single-colour rectangle";
 
