@@ -19,14 +19,61 @@
  *
  * 想强制指定后端时，预先设置环境变量即可（例如 `QT_QPA_PLATFORM=offscreen`）。
  *
+ * 截图基线还要求"文字字形可复现"：Qt 默认使用系统 UI 字体，中文 Windows 上是
+ * Microsoft YaHei UI、CI 英文镜像是 Segoe UI，同一句话的像素完全不同，基线跨机器
+ * 永远对不上。因此入口显式固定字体族与字号（见 `pinReproducibleFont()`）。
+ *
  * 线程约定：与所有 Qt Widgets 用例一样，只在主线程执行。
  */
 
 #include <gtest/gtest.h>
 
 #include <QtCore/QByteArray>
+#include <QtCore/QString>
+#include <QtCore/QStringList>
 #include <QtCore/QtGlobal>
+#include <QtGui/QFont>
+#include <QtGui/QFontDatabase>
 #include <QtWidgets/QApplication>
+
+namespace
+{
+/**
+ * @brief 固定 QApplication 的默认字体族与字号，让文字渲染跨机器可复现。
+ *
+ * @details
+ * 按平台给出首选/备选字体族（Windows：Segoe UI；其它：DejaVu Sans），从
+ * `QFontDatabase().families()` 里挑第一个实际存在的；一个都没有时保持系统默认，
+ * 此时基线差异只能靠容差吸收。字号固定为 9pt，避免不同 DPI 设置下的度量差异。
+ *
+ * @param[in] app 已构造的 QApplication，不可为 NULL。
+ */
+void pinReproducibleFont(QApplication* app)
+{
+#if defined(Q_OS_WIN)
+    const QStringList candidates = QStringList() << QStringLiteral("Segoe UI")
+                                                 << QStringLiteral("Tahoma")
+                                                 << QStringLiteral("Arial");
+#else
+    const QStringList candidates = QStringList() << QStringLiteral("DejaVu Sans")
+                                                 << QStringLiteral("Liberation Sans")
+                                                 << QStringLiteral("Noto Sans");
+#endif
+
+    const QStringList available = QFontDatabase().families();
+    for (const QString& family : candidates)
+    {
+        if (available.contains(family, Qt::CaseInsensitive))
+        {
+            QFont font = app->font();
+            font.setFamily(family);
+            font.setPointSize(9);
+            app->setFont(font);
+            return;
+        }
+    }
+}
+} // namespace
 
 /**
  * @brief 渲染证据测试入口：先初始化 gtest，切到可绘制字体的后端，再建 QApplication。
@@ -60,7 +107,7 @@ int main(int argc, char** argv)
         qputenv("QT_FONT_DPI", QByteArrayLiteral("96"));
 
     QApplication app(argc, argv);
-    Q_UNUSED(app);
+    pinReproducibleFont(&app);
 
     return RUN_ALL_TESTS();
 }

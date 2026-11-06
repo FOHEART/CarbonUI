@@ -149,6 +149,28 @@ inline bool screenshotForceRecord()
 }
 
 /**
+ * @brief 是否运行截图基线用例（本地默认关闭，CI 默认开启）。
+ *
+ * @details
+ * 基线图是按平台分目录、由 **CI runner 渲染生成**并入库的（见文件头说明）。像素级
+ * 比对依赖该机器的字体度量与抗锯齿实现：同一 Windows 版本下，开发机与 CI 的字形
+ * 宽度也可能相差 1px，进而带动布局与描边，使比对稳定假红。因此本地默认跳过，
+ * 只有下列任一条件成立时才真正比对：
+ * - `CI` 非空（GitHub Actions 默认设置）；
+ * - `CARBONUI_SCREENSHOT_LOCAL` 非空（本地显式开启）；
+ * - `CARBONUI_SCREENSHOT_RECORD` 非空（记录模式，需要写出基线）；
+ * - `CARBONUI_SCREENSHOT_BASELINE` 非空（指向本机自备基线目录）。
+ *
+ * @return 应该执行比对/记录时返回 true。
+ */
+inline bool screenshotSuiteEnabled()
+{
+    return !qEnvironmentVariableIsEmpty("CI") || !qEnvironmentVariableIsEmpty("CARBONUI_SCREENSHOT_LOCAL")
+        || !qEnvironmentVariableIsEmpty("CARBONUI_SCREENSHOT_RECORD")
+        || !qEnvironmentVariableIsEmpty("CARBONUI_SCREENSHOT_BASELINE");
+}
+
+/**
  * @brief 读取正整数环境变量，缺失或非法时回落到默认值。
  *
  * @param[in] name         变量名，不可为 NULL。
@@ -379,6 +401,13 @@ inline ScreenshotCheck verifyScreenshot(QWidget* widget, const QString& caseName
 #define CARBONUI_CHECK_SCREENSHOT(widget, caseName)                                          \
     do                                                                                       \
     {                                                                                        \
+        if (!carbonui_test::screenshotSuiteEnabled())                                        \
+        {                                                                                    \
+            delete (widget);                                                                 \
+            GTEST_SKIP() << "本地默认跳过 Screenshot 基线套件（基线由 CI 渲染生成）；"      \
+                            "本地验证请设 CARBONUI_SCREENSHOT_LOCAL=1，或 "                   \
+                            "CARBONUI_SCREENSHOT_BASELINE=<本机基线目录>";                    \
+        }                                                                                    \
         const carbonui_test::ScreenshotCheck carbonuiShotCheck =                             \
             carbonui_test::verifyScreenshot((widget), QStringLiteral(caseName));             \
         delete (widget);                                                                     \
