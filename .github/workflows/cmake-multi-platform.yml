@@ -16,22 +16,23 @@ jobs:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
 
-      # Set up a matrix to run the following 3 configurations:
+      # Set up a matrix to run the following configurations:
       # 1. <Windows, Release, latest MSVC compiler toolchain on the default runner image, default generator>
       # 2. <Linux, Release, latest GCC compiler toolchain on the default runner image, default generator>
-      # 3. <Linux, Release, latest Clang compiler toolchain on the default runner image, default generator>
       #
-      # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
+      # Ubuntu 固定 ubuntu-24.04（不用 ubuntu-latest）：runner 的大版本会随镜像迁移而变
+      # （windows-latest 已迁到 windows-2025-vs2026），固定版本号才能保证Qt/编译器/系统库稳定。
+      # 共享库只保留 ON（OFF 静态库组合由本地构建覆盖，省一轮 CI）。
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-24.04, windows-latest]
         build_type: [Release]
-        build_shared: [ON, OFF]
+        build_shared: [ON]
         c_compiler: [gcc,  cl]
         include:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             c_compiler: gcc
             cpp_compiler: g++
         exclude:
@@ -39,7 +40,7 @@ jobs:
             c_compiler: gcc
           - os: windows-latest
             c_compiler: clang
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             c_compiler: cl
 
     steps:
@@ -67,7 +68,7 @@ jobs:
         echo "QT_ARCH=win64_msvc2019_64" >> "$GITHUB_ENV"
 
     - name: Set Qt cache dir (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
       shell: bash
       run: |
         echo "QT_CACHE_DIR=${{ github.workspace }}/.qt" >> "$GITHUB_ENV"
@@ -75,7 +76,7 @@ jobs:
         echo "QT_ARCH=gcc_64" >> "$GITHUB_ENV"
 
     - name: Install system dependencies (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
       shell: bash
       run: |
         sudo apt-get update
@@ -138,7 +139,7 @@ jobs:
         test -f "${Qt5_DIR}/Qt5Config.cmake"
 
     - name: Install Qt 5.14.2 (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
       uses: jurplel/install-qt-action@v4
       with:
         version: '5.14.2'
@@ -153,7 +154,7 @@ jobs:
         cache: true
 
     - name: Detect Qt CMake package (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
       shell: bash
       run: |
         echo "Env dump (Qt-related):"
@@ -194,7 +195,7 @@ jobs:
         echo "CMAKE_PREFIX_PATH=${QT_PREFIX}" >> "$GITHUB_ENV"
 
     - name: Verify Qt CMake package (Ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-24.04'
       shell: bash
       run: |
         echo "Qt5_DIR=${Qt5_DIR}"

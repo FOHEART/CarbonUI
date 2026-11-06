@@ -27,7 +27,9 @@ concurrency:
 jobs:
   # ────────────────────────── Linux（POSIX sh 分支）──────────────────────────
   ubuntu-scripts:
-    runs-on: ubuntu-latest
+    # 固定 24.04（不用 ubuntu-latest）：runner 大版本会随镜像迁移而变，
+    # Qt 5.14 只提供 GCC 64 位二进制包，系统库/编译器一旦跳到新版本就白红一轮
+    runs-on: ubuntu-24.04
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
