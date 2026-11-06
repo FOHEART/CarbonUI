@@ -82,6 +82,13 @@ cd /d "%BUILD%"
 if "%FILTER%"=="" (
     ctest --output-on-failure -C %CONFIG%
 ) else (
+    REM ctest -R 没匹配到用例时退出码是 0，会把"一个用例都没跑到"误报成通过；
+    REM 先用 -N 断言确实匹配到了用例（新用例没编进去、用例名写错都会在这里拦下）
+    ctest -N -C %CONFIG% -R "%FILTER%" 2>&1 | findstr /r /c:"Total Tests: [1-9]" >nul
+    if errorlevel 1 (
+        echo [ERROR] filter "%FILTER%" matched no test
+        exit /b 1
+    )
     ctest --output-on-failure -C %CONFIG% -R "%FILTER%"
 )
 if errorlevel 1 (

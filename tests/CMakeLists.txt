@@ -97,6 +97,7 @@ carbonui_configure_test_target(carbonui_tests "Unit." offscreen)
 add_executable(carbonui_visual_tests
     visual/main.cpp
     visual/carbonui_render_test.cpp
+    visual/screenshot_test.cpp
 )
 # "windows" on Win32 so the font engine is available; the suite skips text
 # assertions on platforms whose font database is empty.
@@ -106,3 +107,16 @@ else()
     set(CARBONUI_VISUAL_QPA offscreen)
 endif()
 carbonui_configure_test_target(carbonui_visual_tests "Visual." ${CARBONUI_VISUAL_QPA})
+
+# 截图基线：基线必须按平台分目录。字体引擎不同（DirectWrite / FreeType），
+# 同一控件文字的亚像素分布本来就不同，跨平台共用一份基线只会永久红灯。
+if(WIN32)
+    set(CARBONUI_SCREENSHOT_PLATFORM "windows")
+elseif(APPLE)
+    set(CARBONUI_SCREENSHOT_PLATFORM "macos")
+else()
+    set(CARBONUI_SCREENSHOT_PLATFORM "linux")
+endif()
+target_compile_definitions(carbonui_visual_tests PRIVATE
+    CARBONUI_SCREENSHOT_BASELINE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/visual/baseline"
+    CARBONUI_SCREENSHOT_PLATFORM="${CARBONUI_SCREENSHOT_PLATFORM}")

@@ -298,6 +298,9 @@ void CarbonUIClass::applyButtonStyle(QPushButton* btn, ButtonShape shape)
         .arg(tl).arg(bl).arg(tr).arg(br);
     stylesheet += "QPushButton:hover { background-color: #00b0ff; }";
     stylesheet += "QPushButton:pressed { background-color: #007bb3; }";
+    // 禁用态必须有独立规则，否则按钮被 setEnabled(false) 后仍渲染成可用态，
+    // 用户分不清能不能点。灰底取自主题里既有的"非激活灰"，文字压暗但保持可读。
+    stylesheet += "QPushButton:disabled { background-color: #636363; color: #cfcfcf; }";
 
     btn->setStyleSheet(stylesheet);
     btn->setCursor(Qt::PointingHandCursor);

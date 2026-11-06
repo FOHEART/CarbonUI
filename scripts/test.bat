@@ -29,6 +29,12 @@ cmake --build "$BUILD" --target carbonui_tests carbonui_visual_tests -j"$JOBS" |
 echo "[3/3] ctest [$CONFIG]"
 cd "$BUILD" || exit 1
 if [ -n "$FILTER" ]; then
+    # ctest -R 没匹配到任何用例时退出码是 0，直接跑会把"一个用例都没跑到"误报成通过
+    # （新用例没编进去、用例名写错都会走到这里）。先用 -N 断言确实匹配到了用例。
+    if ! ctest -N -R "$FILTER" 2>/dev/null | grep -qE 'Total Tests: [1-9]'; then
+        echo "[ERROR] 过滤器 \"$FILTER\" 没有匹配到任何用例（构建失败或用例名写错）"
+        exit 1
+    fi
     ctest --output-on-failure -R "$FILTER"
 else
     ctest --output-on-failure

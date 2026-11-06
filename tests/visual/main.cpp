@@ -49,6 +49,16 @@ int main(int argc, char** argv)
 #endif
     }
 
+    // 截图基线要求同平台内像素可复现：固定缩放因子与逻辑 DPI，否则 150% 缩放的
+    // 开发机会抓出比 CI 大 1.5 倍的图，尺寸一变基线永远对不上。必须在 QApplication
+    // 构造之前设置，且尊重调用方已经显式指定的值。
+    if (qEnvironmentVariableIsEmpty("QT_SCALE_FACTOR"))
+        qputenv("QT_SCALE_FACTOR", QByteArrayLiteral("1"));
+    if (qEnvironmentVariableIsEmpty("QT_AUTO_SCREEN_SCALE_FACTOR"))
+        qputenv("QT_AUTO_SCREEN_SCALE_FACTOR", QByteArrayLiteral("0"));
+    if (qEnvironmentVariableIsEmpty("QT_FONT_DPI"))
+        qputenv("QT_FONT_DPI", QByteArrayLiteral("96"));
+
     QApplication app(argc, argv);
     Q_UNUSED(app);
 

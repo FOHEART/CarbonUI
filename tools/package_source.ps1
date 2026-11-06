@@ -61,9 +61,16 @@ $excludeFiles = @(
 # 用 / 分隔：Windows 与 Linux 上 Join-Path 都能得到正确路径（反斜杠在 Linux 上是字面字符，会匹配失败）
 $excludeAbsolute = @((Join-Path $repoRoot 'scripts/git_pull_latest.bat'))
 
+# 开发专用目录不进客户包（WSL 联调脚本只服务本机预验证，客户拿到也没用）；
+# 截图基线是内部视觉回归数据，客户环境没有对应的字体引擎，带了只会让测试全部 skip
+$excludeAbsoluteDirs = @(
+    (Join-Path $repoRoot 'scripts/wsl'),
+    (Join-Path $repoRoot 'tests/visual/baseline')
+)
+
 # ---- 复制：优先 robocopy（Windows），否则自写复制 ---------------------------
 function Copy-TreeWithExcludes {
-    param($Source, $Dest, $ExcludeDirNames, $ExcludeFilePatterns, $ExcludeAbsolutePaths)
+    param($Source, $Dest, $ExcludeDirNames, $ExcludeFilePatterns, $ExcludeAbsolutePaths, $ExcludeAbsoluteDirs)
 
     foreach ($item in Get-ChildItem -LiteralPath $Source -Recurse -Force) {
         $rel = $item.FullName.Substring($Source.Length).TrimStart('\', '/')
@@ -72,6 +79,16 @@ function Copy-TreeWithExcludes {
         $skip = $false
         foreach ($abs in $ExcludeAbsolutePaths) {
             if ($item.FullName -eq $abs) { $skip = $true; break }
+        }
+        if ($skip) { continue }
+
+        # 1b) 绝对目录及其子树排除（开发专用目录）
+        foreach ($absDir in $ExcludeAbsoluteDirs) {
+            if ($item.FullName -eq $absDir) { $skip = $true; break }
+            foreach ($sep in @('\', '/')) {
+                if ($item.FullName.StartsWith($absDir + $sep)) { $skip = $true; break }
+            }
+            if ($skip) { break }
         }
         if ($skip) { continue }
 
@@ -110,6 +127,7 @@ if ($robocopy) {
     foreach ($d in $excludeDirs) { $robocopyArgs += @('/XD', $d) }
     foreach ($f in $excludeFiles) { $robocopyArgs += @('/XF', $f) }
     foreach ($a in $excludeAbsolute) { $robocopyArgs += @('/XF', $a) }
+    foreach ($d in $excludeAbsoluteDirs) { $robocopyArgs += @('/XD', $d) }
     & robocopy @robocopyArgs | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "复制工程文件失败（robocopy 退出码 $LASTEXITCODE）" }
 } else {
@@ -117,7 +135,8 @@ if ($robocopy) {
     Copy-TreeWithExcludes -Source $repoRoot -Dest $stageDir `
         -ExcludeDirNames $excludeDirs `
         -ExcludeFilePatterns $excludeFiles `
-        -ExcludeAbsolutePaths $excludeAbsolute
+        -ExcludeAbsolutePaths $excludeAbsolute `
+        -ExcludeAbsoluteDirs $excludeAbsoluteDirs
 }
 
 # ---- 泄漏校验：客户包不得含 git 痕迹 ----------------------------------------

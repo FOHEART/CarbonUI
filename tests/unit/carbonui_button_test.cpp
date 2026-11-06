@@ -83,4 +83,18 @@ TEST(ButtonStyle, AppliesAccentPaletteAndPointerCursor)
     EXPECT_QSS_CONTAINS(button.styleSheet(), "background-color: #009ee8");
     EXPECT_QSS_CONTAINS(button.styleSheet(), "QPushButton:hover { background-color: #00b0ff; }");
     EXPECT_QSS_CONTAINS(button.styleSheet(), "QPushButton:pressed { background-color: #007bb3; }");
+    EXPECT_QSS_CONTAINS(button.styleSheet(), "QPushButton:disabled { background-color: #636363");
+}
+
+TEST(ButtonStyle, DisabledRuleSurvivesShapeVariants)
+{
+    // 禁用态规则与圆角形状无关：任何形状都不允许漏掉 disabled 分支，
+    // 否则按钮在 setEnabled(false) 后仍渲染成可用态（截图基线曾抓到过）。
+    QPushButton round;
+    QPushButton rectangle;
+    CarbonUIClass::applyButtonStyle(&round, CarbonUIClass::Shape_RoundAll);
+    CarbonUIClass::applyButtonStyle(&rectangle, CarbonUIClass::Shape_Rectangle);
+
+    EXPECT_QSS_CONTAINS(round.styleSheet(), "QPushButton:disabled");
+    EXPECT_QSS_CONTAINS(rectangle.styleSheet(), "QPushButton:disabled");
 }
