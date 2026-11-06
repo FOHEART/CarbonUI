@@ -225,3 +225,14 @@ jobs:
       # colour) in the log; without it a failing render test only prints its name.
       run: ctest --build-config ${{ matrix.build_type }} --output-on-failure
 
+    - name: Upload ui-artifacts (on test failure)
+      # 失败时上传截图产物（实拍 + 差异图），供肉眼比对与基线重录
+      # （tests/visual/screenshot_test.cpp 的 Screenshot 套件产物）。
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ui-artifacts-${{ matrix.os }}
+        path: build/**/ui-artifacts/screenshots/*.png
+        if-no-files-found: ignore
+        retention-days: 7
+
