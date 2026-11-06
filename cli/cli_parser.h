@@ -5,6 +5,11 @@
  */
 
 /**
+ * @defgroup carbonui_cli carbonui_cli（命令行工具）
+ * @brief 独立薄 CLI：信封协议、渲染命令与控件工厂。
+ */
+
+/**
  * @file  cli_parser.h
  * @brief carbonui_cli 的公共工具：统一信封、选项解析、枚举映射。
  * @author CarbonUI
