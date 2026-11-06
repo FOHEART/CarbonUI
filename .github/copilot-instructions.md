@@ -6,6 +6,8 @@ Lightweight **Qt 5 Widgets** styling/helper library (C++, CMake). It ships no ap
 
 The build was validated with the Visual Studio 2022 generator against `D:/Qt5.15.2/5.15.2/msvc2019_64`.
 
+> Windows 日常开发可直接用 `scripts\build.bat` / `scripts\test.bat`（详见下文「## scripts/ — 一键工作流脚本」一节），不必手敲 cmake。
+
 ```powershell
 # configure (static by default; add -DBUILD_CARBONUI_SHARED=ON for a DLL)
 cmake -S . -B build -DCMAKE_PREFIX_PATH="D:/Qt5.15.2/5.15.2/msvc2019_64" -DBUILD_CARBONUI_SHARED=ON
@@ -49,7 +51,7 @@ ctest --test-dir build -C Release -R "^Visual\."           # render evidence onl
 
 - `ctest` now really runs the suite; "tests pass" is a valid claim **only** after `ctest` output shows `100% tests passed`.
 - There is **no formatter or linter config in the repo** (README mentions `.clang-format` — it does not exist).
-- README drift: it claims C++17 (project sets `CMAKE_CXX_STANDARD 11`) and a `lib/Debug`/`lib/Release` artifact layout (the project sets no output dirs — artifacts land in the build tree). Trust `CMakeLists.txt`.
+- README 已于 2026-11-06 与代码对齐（C++11、真实头文件清单、`out/build/x64-*` 构建布局）；改 CMake 选项或输出目录时记得同步 README，不要重新引入 `lib/Debug` 这类已废弃的说法。
 - Write C++11-compatible code. Include a real `#include` for everything used; headers include concrete Qt modules (`<QtWidgets/QPushButton>`, `<QtCore/QEvent>`) rather than `<QtWidgets>`.
 
 ## 本机可用工具（D:\autotools）
@@ -102,6 +104,34 @@ Two independently usable pieces, no shared state, no namespaces (all globals in 
 - **Resources**: `Resource.qrc` uses prefix `/img`, so URLs are `:/img/Resources/img/arrow_down.png` (as in `setupComboBoxStyle`). `applyTreeViewStyle()` uses `:/images/...`, which does not resolve — don't copy that path.
 - **Every source file starts with the MPL-2.0 comment header.** Indentation is inconsistent between files (4 spaces in `CarbonUIClass.cpp`, tabs in `CarbonUIClass_QRadioButton.cpp` and the group box code) — match the file you are editing instead of reformatting.
 - `include/` is the only public include root (`PUBLIC $<BUILD_INTERFACE:...>/include`); internal helpers stay in `.cpp` files, and there are no install rules or package config — the library is meant to be consumed in-tree.
+
+## scripts/ — 一键工作流脚本
+
+所有 `.bat` 都是**双解释器单文件**（`::; exec sh …` 首行 + `#__SH__` 分界）：Windows 走 cmd 段，Linux 用 `sh scripts/xxx.bat` 跑 POSIX 段。文件为 UTF-8，cmd 段开头 `chcp 65001`——**中文注释必须出现在 chcp 之后**。
+
+| 脚本 | 功能 |
+| --- | --- |
+| `scripts\build.bat [2022\|2026] [Debug\|Release]` | 配置 + 编译（缺省两配置都编）。VS 多配置生成器，构建树 `out\build\x64-<cfg>`；Qt 前缀取 `QTDIR` 环境变量，否则回落本机默认 `D:\Qt5.15.2\5.15.2\msvc2019_64` |
+| `scripts\test.bat [Debug\|Release] [ctest -R 正则]` | TDD 一键循环，用**独立测试构建树** `out\build\tdd-tests`：configure → build `carbonui_tests carbonui_visual_tests carbonui_cli` → `ctest`。带过滤器时先 `ctest -N` 断言确实匹配到用例，防止「空匹配误报通过」（新用例没编进去/用例名写错会在这里拦住） |
+| `scripts\deploy.bat [Debug\|Release] [构建树]` | `cmake --install` 到 `out\install\x64-<cfg>` 并汇总头文件/库文件（只清空汇总子目录，幂等重跑），随后调用 `sync_agent_harness.bat` |
+| `scripts\sync_agent_harness.bat [Debug\|Release] [安装目录]` | 把 `carbonui_cli.exe` + `agent-harness/` + `SKILL.md` 同步到安装目录（deploy 内部调用；也可单独跑给已装目录补 harness） |
+| `scripts\gen_docs.bat` | Doxygen 文档生成：从 `include\CarbonUIVersion.h` 解析版本注入 `$(CARBONUI_VERSION)`；doxygen 路径取 `DOXYGEN` 环境变量，默认 `D:\autotools\doxygen-1.11.0`；告警日志在 `out\doxygen\doxygen_warnings.log`，**有告警即失败**（非 0 退出码） |
+| `scripts\package.bat [版本号]` | 打可分发源码 ZIP 到 `out\pack`（实际逻辑唯一在 `tools\package_source.ps1`）；版本缺省解析自 `CarbonUIVersion.h` |
+| `scripts\release.bat [--force]` | 发布：校验工作树干净（`--force` 跳过）→ 校验本地/远程无同名 tag → 创建并推送 annotated tag `v<版本>`（版本解析自 `CarbonUIVersion.h`）→ `release.yml` 校验 tag 与头文件一致后发布 GitHub Release（资产 `CarbonUI_v<版本>*.zip`） |
+| `scripts\git_pull_latest.bat` | `git fetch` + `git pull origin main`，结尾打印最近 5 条提交 |
+
+### scripts\ci\ — GitHub Actions 查询与运维（PowerShell 实现 + 同名 .bat 入口）
+
+公共设施在 `ci_common.ps1`（dot-source 引入）：`Resolve-GhCli`（`GH_CLI` 环境变量 > `D:\autotools\gh_windows_amd64\bin\gh.exe` > PATH）、`Set-GhToken`（`GH_TOKEN`/`GITHUB_TOKEN` > `git credential fill` 取 Windows 凭据管理器令牌）、`Resolve-Repo`（参数 > `GH_REPO_DEFAULT` > origin URL）。**该目录所有文件必须纯 ASCII**——PowerShell 5.1/cmd 把无 BOM 文件按 ANSI 读，中文会破坏解析；脚本退出码必须正确传播（供 CI 链式调用）。
+
+- `check_ci.bat` — 查询/等待 workflow runs：不带参数列出最近 run；`-Watch` 等最新（或 `-RunId` 指定）run 结束；`-RunId <id>` 打印该 run 的失败日志摘要
+- `pull_artifacts.bat` — 下载 run 产物（`ui-artifacts` 截图等）到 `out\ci-artifacts`（每次清空重下，`gh run download` 不覆盖已存在文件）；`-Name ui-artifacts-*` 按名过滤
+- `refresh_baselines.bat` — **重录截图基线的标准流程**：拉取 CI run 的 ui-artifacts，把 windows 产物覆盖到 `tests\visual\baseline\windows`、ubuntu 产物覆盖到 `baseline\linux`（跳过 `*-diff.png`）；`-DryRun` 只列不拷。覆盖后 `git diff --stat` 审查 → 提交 → 让 CI 复验
+- `rerun_failed.bat` — 只重跑指定 run（缺省最新）的失败 jobs；仅对终态 run 有效，需 workflow/repo 权限；`-DryRun` 预览
+
+### scripts\wsl\ — WSL 预验证
+
+`wsl.bat [sync|build|test|docs|verify]`：把仓库同步到 WSL 家目录副本（默认 `~/CarbonUI`）后跑同一套脚本的 POSIX 分支，本地预验证、不必等 CI 红一轮。`verify`（缺省动作）依次 build → test → docs，任一失败即停。环境变量：`WSL_DISTRO`（默认 `Ubuntu-24.04`）、`WSL_DEST`（副本目录）、`WSL_QTDIR`（WSL 内 Qt 前缀，缺省交给 `find_package`）。其余 `wsl/*.sh`（`lib/sync/build/test/docs.sh`）是它的实现细节，不直接调用。踩坑记录：`wsl.exe -d` 参数**不吃引号**（写 `-d "%NAME%"` 会报 `WSL_E_DISTRO_NOT_FOUND`）。
 
 ## CI
 

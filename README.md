@@ -4,17 +4,18 @@ Lightweight Qt Widgets UI helpers library
 
 ## Overview
 
-`CarbonUI` provides a small collection of UI helper widgets and styling utilities for Qt Widgets-based applications. The project is written in C++17 and built with CMake (Ninja generator supported).
+`CarbonUI` provides a small collection of UI helper widgets and styling utilities for Qt Widgets-based applications. The project is written in C++11 and built with CMake (Ninja / Visual Studio generators supported).
 
 ## Features
 
-- Helper styles for radio buttons, line edits, checkboxes and buttons
-- `QGroupBox` collapse/expand helper with animation
-- Clean include/src layout for easy integration
+- `CarbonUIClass` — one-stop static style appliers: primary buttons (round/left/rect/right shapes for segmented toolbars), radio buttons (four-corner/left/right/rect shapes + centered child label), self-drawn indicator checkboxes, number-input line edits (centered, select-all-on-focus, C-locale validator), borderless scroll areas, window menu bars and a global `QToolTip` style
+- `QGroupBoxCollapser` — turns any `QGroupBox` into an animated collapsible panel (title becomes a checkable tool button, body collapses with a 180 ms `maximumHeight` animation)
+- Dark carbon theme with consistent palette (`#0d0d0d` window, `#cdcdcd`/`#ffffff` text, `#2d2d2d`/`#333333` control backgrounds, `#0078d4`-family accents)
+- `carbonui_cli` — headless widget screenshot / QSS export CLI for Agents and CI
 
 ## Prerequisites
 
-- C++17 compatible compiler
+- C++11 compatible compiler
 - CMake >= 3.16
 - Ninja (recommended generator)
 - Qt5 (Widgets, Core, Gui)
@@ -27,7 +28,14 @@ Install Qt5 on your platform (examples):
 
 ## Build
 
-From the project root:
+On Windows the one-shot script does configure + build (Debug & Release) and handles the Qt prefix (`QTDIR` env var or the default `D:\Qt5.15.2\...` location):
+
+```bat
+scripts\build.bat            # Visual Studio 2022, both configs
+scripts\build.bat 2026 Release
+```
+
+From the project root (manual, works on all platforms):
 
 ```sh
 mkdir -p build
@@ -44,18 +52,19 @@ cmake --build .
 ```
 
 Notes:
-- The library target defines `CARBONUI_LIB` during the build so headers export symbols correctly.
-- Build outputs (DLL/.lib/.so) are placed under `lib/Debug` or `lib/Release` depending on the configuration.
+- Default build is a **static** library; set `-DBUILD_CARBONUI_SHARED=ON` for a DLL (`BUILD_CARBONUI_SHARED`).
+- The export macro `CARBONUI_DLL_API` (see `include/carbonui_global.h`) is driven by `CARBONUI_DLL_EXPORT` (defined PRIVATE when building the shared lib) and `CARBONUI_STATIC_LIB` (propagated PUBLIC in the static build) — consumers need no extra defines.
 
 ## Layout
 
 - `include/` — public headers
-- `src/` — source files
+- `src/` — source files (+ `src/Resources/`, incl. the bundled `font/HarmonyOS_Sans_SC_Regular.ttf` used by the visual suite)
 - `cli/` — `carbonui_cli` command line tool (renders widget screenshots, exports QSS)
 - `agent-harness/` — Python harness for the CLI (CLI-Anything style, see `SKILL.md`)
 - `tests/` — `unit/` state suites, `visual/` render-evidence suite, `support/` shared helpers
-- `docs/` — generated Doxygen HTML (not committed; created by `doxygen Doxyfile`)
-- `lib/` — configured output directory for built artifacts (`lib/Debug`, `lib/Release`)
+- `scripts/` — one-shot `build.bat`/`test.bat`/`gen_docs.bat`/`release.bat`, plus `ci/` (query & wait for GitHub Actions results) and `wsl/`
+- `docs/` — generated Doxygen HTML (not committed; created by `scripts\gen_docs.bat`)
+- Build outputs land in the CMake build directory (`out/build/x64-Debug`, `out/build/x64-Release` with `scripts\build.bat`)
 
 ## CLI
 
@@ -77,6 +86,15 @@ window ever shown) and works in CI. For the Agent-facing interface contract —
 including the error-code table and a Python harness — see the repository root
 `SKILL.md` file.
 
+A Python harness wraps the CLI for Agent use (`agent-harness/`, installed with
+`pip install -e agent-harness`); the `carbonui-agent` entry point locates the
+binary via `CARBONUI_CLI_BIN` → deploy dir → build dir → `PATH`:
+
+```sh
+carbonui-agent info
+carbonui-agent snapshot --widget button --shape rect --out shot.png
+```
+
 ## Usage
 
 Link against the `CarbonUI` library from your CMake project:
@@ -91,10 +109,23 @@ target_link_libraries(MyApp PRIVATE CarbonUI Qt5::Widgets Qt5::Core)
 Include headers with:
 
 ```cpp
-#include <CarbonUI.h>
-#include <CarbonUIVersion.h>
-#include <modifyui.h>
-#include <groupboxcollapser.h>
+#include <CarbonUIClass.h>       // style appliers (CarbonUIClass)
+#include <groupboxcollapser.h>   // QGroupBoxCollapser
+#include <CarbonUIVersion.h>     // CARBONUI_VERSION_* macros
+#include <carbonui_global.h>     // export/import macros
+```
+
+Typical calls (all static functions, GUI thread only):
+
+```cpp
+CarbonUIClass::applyButtonStyle(button);                        // round all corners
+CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_LeftRound); // segmented bar, left cell
+CarbonUIClass::applyCheckStyle(checkBox);                       // self-drawn indicator
+CarbonUIClass::applyLineEditStyle_numberInput(lineEdit, 120);   // fixed 120 px
+CarbonUIClass::applyTooltipStyle();                             // global QToolTip rule
+
+QGroupBoxCollapser* c = QGroupBoxCollapser::installIntoGroupBox(groupBox);
+c->addWidget(someChild);        // add content to the collapsible body
 ```
 
 ## Tests
