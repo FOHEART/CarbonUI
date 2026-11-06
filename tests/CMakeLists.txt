@@ -119,4 +119,7 @@ else()
 endif()
 target_compile_definitions(carbonui_visual_tests PRIVATE
     CARBONUI_SCREENSHOT_BASELINE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/visual/baseline"
-    CARBONUI_SCREENSHOT_PLATFORM="${CARBONUI_SCREENSHOT_PLATFORM}")
+    CARBONUI_SCREENSHOT_PLATFORM="${CARBONUI_SCREENSHOT_PLATFORM}"
+    # 视觉测试统一使用仓库内置字体：本地与 CI 加载同一份 TTF，字形度量完全一致，
+    # 截图基线才跨机器可复现（不再依赖系统 UI 字体的偶然差异）。
+    CARBONUI_TEST_BUNDLED_FONT="${CMAKE_SOURCE_DIR}/Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf")

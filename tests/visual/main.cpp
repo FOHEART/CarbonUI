@@ -21,12 +21,16 @@
  *
  * 截图基线还要求"文字字形可复现"：Qt 默认使用系统 UI 字体，中文 Windows 上是
  * Microsoft YaHei UI、CI 英文镜像是 Segoe UI，同一句话的像素完全不同，基线跨机器
- * 永远对不上。因此入口显式固定字体族与字号（见 `pinReproducibleFont()`）。
+ * 永远对不上。因此入口统一加载仓库内置的
+ * `Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf` 并设为默认字体（见
+ * `pinReproducibleFont()`）——本地与 CI 渲染同一份 TTF，字形度量完全一致。
  *
  * 线程约定：与所有 Qt Widgets 用例一样，只在主线程执行。
  */
 
 #include <gtest/gtest.h>
+
+#include <cstdio>
 
 #include <QtCore/QByteArray>
 #include <QtCore/QString>
@@ -42,36 +46,40 @@ namespace
  * @brief 固定 QApplication 的默认字体族与字号，让文字渲染跨机器可复现。
  *
  * @details
- * 按平台给出首选/备选字体族（Windows：Segoe UI；其它：DejaVu Sans），从
- * `QFontDatabase().families()` 里挑第一个实际存在的；一个都没有时保持系统默认，
- * 此时基线差异只能靠容差吸收。字号固定为 9pt，避免不同 DPI 设置下的度量差异。
+ * 统一加载仓库内置的 `Resources/fonts/HarmonyOS_Sans_SC_Regular.ttf`
+ * （编译期宏 `CARBONUI_TEST_BUNDLED_FONT` 给出绝对路径）后设为默认字体：
+ * 本地与 CI 用的是同一份 TTF，字形轮廓与度量完全一致，不再受系统 UI 字体
+ * （中文 Windows 的雅黑 / CI 英文镜像的 Segoe UI）影响。TTF 加载失败时
+ * 保持系统默认并打警告，此时基线差异只能靠容差吸收。字号固定为 9pt，
+ * 避免不同 DPI 设置下的度量差异。
  *
  * @param[in] app 已构造的 QApplication，不可为 NULL。
  */
 void pinReproducibleFont(QApplication* app)
 {
-#if defined(Q_OS_WIN)
-    const QStringList candidates = QStringList() << QStringLiteral("Segoe UI")
-                                                 << QStringLiteral("Tahoma")
-                                                 << QStringLiteral("Arial");
-#else
-    const QStringList candidates = QStringList() << QStringLiteral("DejaVu Sans")
-                                                 << QStringLiteral("Liberation Sans")
-                                                 << QStringLiteral("Noto Sans");
-#endif
-
-    const QStringList available = QFontDatabase().families();
-    for (const QString& family : candidates)
+    const int fontId = QFontDatabase::addApplicationFont(
+        QStringLiteral(CARBONUI_TEST_BUNDLED_FONT));
+    if (fontId < 0)
     {
-        if (available.contains(family, Qt::CaseInsensitive))
-        {
-            QFont font = app->font();
-            font.setFamily(family);
-            font.setPointSize(9);
-            app->setFont(font);
-            return;
-        }
+        std::fprintf(stderr,
+                     "[WARN] 内置字体加载失败：%s\n"
+                     "       文字渲染将回退到系统默认字体，截图基线可能跨机器不一致。\n",
+                     CARBONUI_TEST_BUNDLED_FONT);
+        return;
     }
+
+    const QStringList families = QFontDatabase::applicationFontFamilies(fontId);
+    if (families.isEmpty())
+    {
+        std::fprintf(stderr, "[WARN] 内置字体无可用 family：%s\n", CARBONUI_TEST_BUNDLED_FONT);
+        return;
+    }
+
+    QFont font = app->font();
+    font.setFamily(families.first());
+    font.setPointSize(9);
+    font.setBold(false);
+    app->setFont(font);
 }
 } // namespace
 
