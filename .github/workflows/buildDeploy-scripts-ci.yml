@@ -1,0 +1,236 @@
+# 一键脚本自动化测试（buildDeploy.bat + scripts/ + tools/）
+#
+# 与 cmake-multi-platform.yml 的分工：
+#   - 该 workflow 用裸 cmake 验证工程本身（完整构建）；
+#   - 本 workflow 只验证"一键脚本"（cmd 分支 / POSIX sh 分支 / 错误分支 / 打包）。
+#
+# 设计要点（来自《cmd与sh双解释器脚本参考实现》§十 与《WSL下验证双解释器脚本与构建流程》§九）：
+#   - ubuntu job：sh 分支端到端（build.bat Release + 参数断言 + test.bat + gen_docs + package）+ 错误分支；
+#   - windows job：cmd 错误分支（断言后 verify >nul 归零 ERRORLEVEL，echo 不清零）+
+#     buildDeploy.bat 菜单/参数透传桩测试 + Git Bash 走 sh 分支（CRLF 自清洗）+
+#     至少跑一次 scripts\test.bat（覆盖深层子脚本 tools\build_and_test.bat 的 cmd 解析）+ 打包；
+#   - windows 侧不做"固定 -G 生成器"的裸构建断言（runner 镜像在 VS2022/2026 间变动，
+#     脚本自身用 vswhere 动态探测，工具链选择由本 workflow 的 test.bat 一步覆盖）。
+name: 一键脚本自动化测试（buildDeploy 与 scripts）
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: scripts-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────── Linux（POSIX sh 分支）──────────────────────────
+  ubuntu-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 错误分支不依赖任何构建环境，放最前面先跑，脚本退化时最快失败
+      - name: 错误分支冒烟（deploy 未知配置与 gen_docs 缺依赖）
+        shell: bash
+        run: |
+          if sh scripts/deploy.bat NoSuchConfig; then
+            echo "::error::deploy.bat sh 分支应以 rc=1 退出"
+            exit 1
+          fi
+          echo "[OK] deploy.bat sh 错误分支 rc=1"
+          if bash scripts/deploy.bat NoSuchConfig; then
+            echo "::error::deploy.bat bash 兜底解释应以 rc=1 退出"
+            exit 1
+          fi
+          echo "[OK] deploy.bat bash 兜底错误分支 rc=1"
+          if DOXYGEN=/nonexistent/doxygen sh scripts/gen_docs.bat; then
+            echo "::error::gen_docs.bat 缺 doxygen 时应以 rc=2 退出"
+            exit 1
+          fi
+          echo "[OK] gen_docs.bat 缺依赖分支 rc=2"
+
+      - name: 安装 doxygen 与 OpenGL/XCB 依赖
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends doxygen \
+            libgl1-mesa-dev \
+            mesa-common-dev \
+            libxkbcommon-x11-0 \
+            libx11-xcb1 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-sync1 \
+            libxcb-xfixes0 \
+            libxcb-xinerama0 \
+            libxcb-xkb1
+
+      - name: 安装 Qt 5.14.2（带缓存）
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.14.2'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          dir: ${{ github.workspace }}/.qt
+          setup-python: false
+          install-deps: true
+          cache: true
+
+      # 脚本约定用 QTDIR 环境变量传 Qt 前缀（见 scripts/build.bat 与 tools/build_and_test.bat）
+      - name: 导出 QTDIR 供脚本使用
+        shell: bash
+        run: |
+          echo "QTDIR=${QT_ROOT_DIR}" >> "$GITHUB_ENV"
+          test -d "${QT_ROOT_DIR}" || { echo "::error::QT_ROOT_DIR 未设置"; exit 1; }
+          test -f "${QT_ROOT_DIR}/lib/cmake/Qt5/Qt5Config.cmake" \
+            || { echo "::error::Qt5Config.cmake 不在 QT_ROOT_DIR 下"; exit 1; }
+
+      - name: sh 分支全流程构建 + 参数断言
+        shell: bash
+        run: |
+          sh scripts/build.bat Release > out_build.log 2>&1 || { tail -n 40 out_build.log; exit 1; }
+          # 参数断言：日志必须证明 Release 被真正采用（防 CR 污染参数后静默回落默认值）
+          grep -q "构建 Release（out/build/x64-Release）" out_build.log \
+            || { echo "::error::Release 参数未生效（疑似参数 CR 污染）"; tail -n 40 out_build.log; exit 1; }
+          # deploy 汇总断言：头文件与库文件必须已聚合
+          grep -q "个头文件" out_build.log \
+            || { echo "::error::deploy.bat 产物汇总缺失"; tail -n 20 out_build.log; exit 1; }
+          echo "[OK] sh scripts/build.bat Release 端到端通过"
+
+      - name: sh 分支单元测试
+        shell: bash
+        run: sh scripts/test.bat Release
+
+      - name: 生成文档（告警即失败）
+        shell: bash
+        run: |
+          sh scripts/gen_docs.bat
+          test -f docs/html/index.html || { echo "::error::docs/html/index.html 未生成"; exit 1; }
+          echo "[OK] Doxygen 文档生成且无告警"
+
+      - name: 源码打包 + 产物断言
+        shell: bash
+        run: |
+          sh scripts/package.bat
+          ls out/pack/CarbonUI_v*.zip || { echo "::error::分发包缺失"; exit 1; }
+          echo "[OK] 源码分发包已生成（pwsh/Compress-Archive 回退路径）"
+
+  # ────────────────────────── Windows（cmd 分支 + Git Bash sh 分支）───────────
+  windows-scripts:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 错误分支不依赖 Qt/VS，先跑。断言"预期失败"后必须 verify >nul 归零，
+      # 否则 echo 成功不清零 ERRORLEVEL，step 会以子命令的退出码结束（§9.1 教训）
+      - name: cmd 错误分支冒烟 + verify 归零
+        shell: cmd
+        run: |
+          cmd /d /c scripts\deploy.bat NoSuchConfig
+          if not errorlevel 1 (
+            echo ::error::deploy.bat cmd 错误分支应以 rc=1 退出
+            exit /b 1
+          )
+          verify >nul
+          echo [OK] deploy.bat cmd 错误分支 rc=1
+          cmd /d /c scripts\gen_docs.bat
+          if not errorlevel 1 (
+            echo ::error::gen_docs.bat 缺 doxygen 时应以 rc=2 退出
+            exit /b 1
+          )
+          verify >nul
+          echo [OK] gen_docs.bat 缺依赖分支 rc=2
+
+      - name: 生成 buildDeploy 桩脚本
+        shell: pwsh
+        run: |
+          $src = [IO.File]::ReadAllText('buildDeploy.bat')
+          $stub = $src -replace 'call "%~dp0scripts\\(build|test|gen_docs|package)\.bat"([^&\r\n]*)', 'echo CALL_STUB: scripts\$1.bat$2'
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          [IO.File]::WriteAllText((Join-Path (Get-Location) 'out/bd_stub.bat'), $stub, (New-Object System.Text.UTF8Encoding($false)))
+          if ($stub -notmatch 'CALL_STUB: scripts\\build\.bat') { throw 'stub 生成失败（转发行未匹配）' }
+
+      # 桩测试验证检测/菜单/倒计时/参数透传逻辑，不触发真实编译。
+      # 检测顺序 2022 在前 → 默认年份恒为 2022（单工具链时 3→2→1 倒计时直跑）
+      - name: buildDeploy 菜单与参数透传桩测试
+        shell: cmd
+        run: |
+          out\bd_stub.bat 2026 Release > out\stub_passthrough.log
+          findstr /c:"CALL_STUB: scripts\build.bat 2026 Release" out\stub_passthrough.log >nul
+          if errorlevel 1 (
+            echo ::error::年份参数透传失败（应跳过菜单且年份不重复）
+            type out\stub_passthrough.log
+            exit /b 1
+          )
+          echo [OK] 2026 Release 跳过菜单且年份不重复
+          findstr /c:"CALL_STUB: scripts\test.bat Release" out\stub_passthrough.log >nul
+          if errorlevel 1 (
+            echo ::error::Release 未透传到 test.bat
+            exit /b 1
+          )
+          echo [OK] Release 透传到 test.bat
+          out\bd_stub.bat Release > out\stub_default.log
+          findstr /c:"CALL_STUB: scripts\build.bat 2022 Release" out\stub_default.log >nul
+          if errorlevel 1 (
+            echo ::error::默认年份应为第一个检测到的工具链（2022）
+            type out\stub_default.log
+            exit /b 1
+          )
+          echo [OK] 默认年份为第一个检测到的工具链（2022）
+          verify >nul
+
+      # Git Bash 以 sh 方式解释同一份 .bat（覆盖首行 exec 自清洗与 CRLF 适配）
+      - name: Git Bash 走 sh 分支
+        shell: bash
+        run: |
+          if sh scripts/deploy.bat NoSuchConfig; then
+            echo "::error::sh 分支（Git Bash）应以 rc=1 退出"
+            exit 1
+          fi
+          echo "[OK] Git Bash sh 分支错误路径 rc=1"
+
+      - name: 安装 Qt 5.15.2（带缓存）
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          arch: 'win64_msvc2019_64'
+          dir: ${{ github.workspace }}/.qt
+          setup-python: false
+          install-deps: true
+          cache: true
+
+      - name: 导出 QTDIR 供脚本使用
+        shell: bash
+        run: |
+          echo "QTDIR=${QT_ROOT_DIR}" >> "$GITHUB_ENV"
+          test -d "${QT_ROOT_DIR}" || { echo "::error::QT_ROOT_DIR 未设置"; exit 1; }
+          test -f "${QT_ROOT_DIR}/lib/cmake/Qt5/Qt5Config.cmake" \
+            || { echo "::error::Qt5Config.cmake 不在 QT_ROOT_DIR 下"; exit 1; }
+
+      # 至少跑一次 scripts\test.bat：覆盖深层被 call 的 tools\build_and_test.bat 的
+      # cmd 解析（CRLF/chcp 错位只有真实 cmd 执行才会暴露，CI 只跑 Linux 分支时发现不了）
+      - name: test.bat 覆盖深层子脚本 cmd 解析（构建 + ctest）
+        shell: cmd
+        run: cmd /d /c scripts\test.bat Release
+
+      - name: 打包（robocopy 路径）+ 产物断言
+        shell: cmd
+        run: |
+          cmd /d /c scripts\package.bat
+          if errorlevel 1 exit /b 1
+          dir /b out\pack\CarbonUI_v*.zip
+          if errorlevel 1 (
+            echo ::error::源码分发包缺失
+            exit /b 1
+          )
+          echo [OK] 源码分发包已生成（robocopy 复制路径）
+          verify >nul

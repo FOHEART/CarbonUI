@@ -1,0 +1,10 @@
+# 行尾策略：cmd 批处理必须 CRLF（cmd 解析 LF 会错位，症状是碎片命令报错）。
+# 双解释器 .bat 的 POSIX 段由首行 exec 的 tr -d '\r' 自清洗，CRLF 对 sh 分支无害。
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# PowerShell / YAML / sh 用 LF（pwsh、Actions、bash 均兼容）
+*.ps1  text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sh   text eol=lf
