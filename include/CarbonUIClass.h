@@ -118,18 +118,46 @@ public:
     static void applyLineEditStyle_numberInput(QLineEdit* le, int width = 0);
 
     /**
+     * @brief 复选框指示灯位置枚举。
+     *
+     * @details
+     * 取值只决定自绘指示灯圆点出现在复选框文字的哪一侧，数值本身不参与
+     * 运算，仅作稳定标识，不保证大小顺序。
+     */
+    enum CheckIndicatorPosition
+    {
+        Check_IndicatorLeft = 0, ///< 圆点在左侧：按钮固定 16x16，文字由调用方旁置（旧形态）。
+        Check_IndicatorRight     ///< 圆点在右侧：文字搬进按钮内部左对齐，多个复选框上下
+                                 ///  排列时圆点右对齐。
+    };
+
+    /**
      * @brief 应用"自绘指示灯"复选框外观。
      *
      * @details
-     * 原生 indicator 被压成 0x0，按钮固定为 16x16，内部新增 8x8 的圆点子控件
-     * `<objectName>_indicator`（透明接收鼠标事件）；`text()` 被清空。
-     * 复选框的勾选状态、悬停高亮与左键单击切换都由本函数安装的事件过滤器
-     * 维护，因此样式生效后**不要**再给该控件装自定义 mousePress 逻辑。
+     * 原生 indicator 被压成 0x0，内部新增自绘子控件承载圆点外观；复选框的
+     * 勾选状态、悬停高亮与左键单击切换都由本函数安装的事件过滤器维护，
+     * 因此样式生效后**不要**再给该控件装自定义 mousePress 逻辑。
      *
-     * @param[in,out] cb 目标复选框，**可为 NULL**，为 NULL 时直接返回。
-     * @warning 非幂等：重复调用会再建一个指示灯子控件与布局。
+     * 两种形态（@p position）：
+     * - ::CarbonUIClass::Check_IndicatorLeft（默认）：按钮固定为 16x16 的裸圆点，
+     *   `text()` 被清空，文字由调用方旁置（例如右侧的 QLabel）。内部圆点子控件
+     *   名为 `<objectName>_indicator`（8x8）。
+     * - ::CarbonUIClass::Check_IndicatorRight：文字搬进按钮内部左侧的
+     *   `<objectName>_label` 子标签（沿用单选按钮的文字容器约定，之后改文字
+     *   仍走 `QCheckBox::setText()`，事件过滤器会同步）；16x16 圆环子控件
+     *   `<objectName>_indicator` 及其内部 8x8 圆点 `<objectName>_dot` 靠右放置，
+     *   多个复选框上下排列时圆环右对齐、文字左对齐。
+     *
+     * @param[in,out] cb       目标复选框，**可为 NULL**，为 NULL 时直接返回。
+     * @param[in]     position 指示灯位置，取值必须是
+     *                         ::CarbonUIClass::CheckIndicatorPosition 中的枚举值；
+     *                         传入其他值按 ::CarbonUIClass::Check_IndicatorLeft 处理。
+     *                         默认 ::CarbonUIClass::Check_IndicatorLeft。
+     * @warning 非幂等：重复调用会再建一套指示灯子控件与布局。
      */
-    static void applyCheckStyle(QCheckBox* cb);
+    static void applyCheckStyle(QCheckBox* cb,
+                                CheckIndicatorPosition position = Check_IndicatorLeft);
 
     /**
      * @brief 应用无边框滚动区外观，并把纵向滚动条收窄到 4px。

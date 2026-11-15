@@ -9,13 +9,17 @@
  * @details
  * 覆盖点：空指针安全、文本转移到子控件、固定几何、指示器颜色随勾选状态变化、
  * 悬停状态切换，以及本地事件过滤器对左键释放的拦截（含非左键不得误触）。
+ * 另覆盖指示灯居右形态（::CarbonUIClass::Check_IndicatorRight）：文字容器、
+ * 圆环/圆点子控件、可变几何、圆点配色、悬停高亮与改文案同步。
  */
 
 #include <gtest/gtest.h>
 
+#include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QCheckBox>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 
 #include "CarbonUIClass.h"
@@ -123,4 +127,105 @@ TEST(CheckStyle, NonLeftButtonReleaseDoesNotToggle)
     QApplication::sendEvent(&checkBox, &release);
 
     EXPECT_FALSE(checkBox.isChecked()) << "only the left button may toggle the checkbox";
+}
+
+TEST(CheckStyle, RightIndicatorMovesTextIntoChildLabel)
+{
+    QCheckBox checkBox;
+    checkBox.setObjectName(QStringLiteral("chkR"));
+    checkBox.setText(QStringLiteral("Enable"));
+
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+
+    QLabel* label = checkBox.findChild<QLabel*>(QStringLiteral("chkR_label"),
+                                                Qt::FindDirectChildrenOnly);
+    ASSERT_NE(label, nullptr) << "child label 'chkR_label' is missing";
+    EXPECT_EQ(label->text(), QStringLiteral("Enable"));
+    EXPECT_TRUE(checkBox.text().isEmpty()) << "the caption must move into the child label";
+}
+
+TEST(CheckStyle, RightIndicatorCreatesRingWithInnerDot)
+{
+    QCheckBox checkBox;
+    checkBox.setObjectName(QStringLiteral("chkR"));
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+
+    QWidget* ring = findIndicator(&checkBox);
+    ASSERT_NE(ring, nullptr) << "ring child 'chkR_indicator' is missing";
+    EXPECT_EQ(ring->size(), QSize(16, 16));
+
+    QWidget* dot =
+        ring->findChild<QWidget*>(QStringLiteral("chkR_dot"), Qt::FindDirectChildrenOnly);
+    ASSERT_NE(dot, nullptr) << "dot child 'chkR_dot' is missing";
+    EXPECT_EQ(dot->parentWidget(), ring);
+    EXPECT_EQ(dot->size(), QSize(8, 8));
+}
+
+TEST(CheckStyle, RightIndicatorKeepsGeometryResizable)
+{
+    QCheckBox checkBox;
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+
+    EXPECT_NE(checkBox.maximumSize(), QSize(16, 16))
+        << "right-indicator mode must not fix the widget to 16x16";
+    EXPECT_EQ(checkBox.cursor().shape(), Qt::PointingHandCursor);
+    EXPECT_TRUE(checkBox.testAttribute(Qt::WA_Hover));
+}
+
+TEST(CheckStyle, RightIndicatorDotColourFollowsCheckedState)
+{
+    QCheckBox checkBox;
+    checkBox.setObjectName(QStringLiteral("chkR"));
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    QWidget* dot = checkBox.findChild<QWidget*>(QStringLiteral("chkR_dot"));
+    ASSERT_NE(dot, nullptr);
+
+    EXPECT_QSS_CONTAINS(dot->styleSheet(), "#636363");
+
+    checkBox.setChecked(true);
+
+    EXPECT_QSS_CONTAINS(dot->styleSheet(), "#009ee8");
+
+    checkBox.setChecked(false);
+
+    EXPECT_QSS_CONTAINS(dot->styleSheet(), "#636363");
+}
+
+TEST(CheckStyle, RightIndicatorHoverHighlightsRingAndRestoresItOnLeave)
+{
+    QCheckBox checkBox;
+    checkBox.setObjectName(QStringLiteral("chkR"));
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    QWidget* ring = findIndicator(&checkBox);
+    ASSERT_NE(ring, nullptr);
+
+    QEvent enter(QEvent::Enter);
+    QApplication::sendEvent(&checkBox, &enter);
+    EXPECT_QSS_CONTAINS(ring->styleSheet(), "#ffffff");
+
+    QEvent leave(QEvent::Leave);
+    QApplication::sendEvent(&checkBox, &leave);
+    EXPECT_QSS_CONTAINS(ring->styleSheet(), "#636363");
+
+    checkBox.setChecked(true);
+    QApplication::sendEvent(&checkBox, &leave);
+    EXPECT_QSS_CONTAINS(ring->styleSheet(), "#009ee8");
+}
+
+TEST(CheckStyle, RightIndicatorCaptionChangeIsSyncedOnShowEvent)
+{
+    QCheckBox checkBox;
+    checkBox.setObjectName(QStringLiteral("chkR"));
+    checkBox.setText(QStringLiteral("Old"));
+    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    QLabel* label = checkBox.findChild<QLabel*>(QStringLiteral("chkR_label"),
+                                                Qt::FindDirectChildrenOnly);
+    ASSERT_NE(label, nullptr);
+
+    checkBox.setText(QStringLiteral("New")); // documented way to change the caption
+    QEvent show(QEvent::Show);
+    QApplication::sendEvent(&checkBox, &show);
+
+    EXPECT_EQ(label->text(), QStringLiteral("New"));
+    EXPECT_TRUE(checkBox.text().isEmpty());
 }

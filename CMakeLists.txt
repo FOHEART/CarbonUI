@@ -63,6 +63,16 @@ set(PROJECT_HEADERS
 set(PROJECT_SOURCES
     src/CarbonUIClass.cpp
     src/CarbonUIClass_QRadioButton.cpp
+    src/CarbonUIClass_QCheckBox.cpp
+    src/CarbonUIClass_QLineEdit.cpp
+    src/CarbonUIClass_QPushButton.cpp
+    src/CarbonUIClass_QScrollArea.cpp
+    src/CarbonUIClass_QMenuBar.cpp
+    src/CarbonUIClass_QToolBar.cpp
+    src/CarbonUIClass_QTabWidget.cpp
+    src/CarbonUIClass_QComboBox.cpp
+    src/CarbonUIClass_QStatusBar.cpp
+    src/CarbonUIClass_QTreeWidget.cpp
     src/groupboxcollapser.cpp
 )
 
