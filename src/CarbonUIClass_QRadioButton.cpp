@@ -27,9 +27,10 @@
 #include "CarbonUIClass.h"
 #include <QtCore/QEvent>
 #include <QtCore/QObject>
-#include <QtWidgets/QRadioButton>
+#include <QtGui/QPainter>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QRadioButton>
 
 
 namespace
@@ -38,6 +39,53 @@ namespace
 constexpr const char* kCarbonRadioLabelSuffix = "_label";
 /// 标记"同步过滤器已安装"的动态属性名，用于避免重复安装。
 constexpr const char* kCarbonRadioSyncInstalledProperty = "_carbonui_radio_sync_installed";
+
+/**
+ * @brief 单选按钮的文字容器标签：铺满按钮内容区并对超宽文本做省略绘制。
+ *
+ * @details
+ * 旧实现把标签按文本宽度 adjustSize 后再 setGeometry 到按钮矩形，两股力量
+ * 在布局失效时互相打架：布局以"带对齐的项取 sizeHint"重排，长文本标签被
+ * 撑到比按钮更宽并居中，文字就越出了按钮边界。
+ * 本类改为纯布局驱动：
+ *  - 水平/垂直尺寸策略 Ignored，布局把它铺满整个格子（即按钮内容区）；
+ *  - 超出宽度的文本在绘制阶段按字体度量省略（ElideRight），从机制上保证
+ *    文字永远落在按钮矩形之内。
+ * 颜色沿用样式表的 color 规则（polish 阶段写入调色板 WindowText），
+ * 选中/未选中的变色机制不受影响。
+ */
+class CarbonRadioTextLabel : public QLabel
+{
+public:
+	/**
+	 * @brief 构造文字容器标签。
+	 * @param[in] text 初始文案，可为空字符串。
+	 * @param[in] parent 父控件（宿主单选按钮），不可为 NULL。
+	 */
+	explicit CarbonRadioTextLabel(const QString& text, QWidget* parent)
+		: QLabel(text, parent)
+	{
+		setAlignment(Qt::AlignCenter);
+		setAttribute(Qt::WA_TransparentForMouseEvents);
+		// 铺满按钮内容区：布局给多少就用多少，文本在绘制时自行省略
+		setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+	}
+
+protected:
+	/**
+	 * @brief 省略绘制：超宽文本以省略号截断并居中画出。
+	 * @param[in] event 绘制事件对象，不可为 NULL。
+	 */
+	void paintEvent(QPaintEvent* event) override
+	{
+		Q_UNUSED(event);
+		QPainter painter(this);
+		const QString elided =
+			fontMetrics().elidedText(text(), Qt::ElideRight, width());
+		painter.setPen(palette().color(QPalette::WindowText));
+		painter.drawText(rect(), alignment(), elided);
+	}
+};
 
 /**
  * @brief 查找按钮下的文字容器标签。
@@ -49,7 +97,7 @@ constexpr const char* kCarbonRadioSyncInstalledProperty = "_carbonui_radio_sync_
  */
 QLabel* findCenterLabel(QRadioButton* rb)
 {
-	if (!rb)
+	if (rb == nullptr)
 	{
 		return nullptr;
 	}
@@ -62,8 +110,10 @@ QLabel* findCenterLabel(QRadioButton* rb)
  *
  * @details
  * 流程：(1) 取 `rb->text()`，为空则什么都不做（避免把标签内容擦掉）；
- * (2) 文本写入标签、清空按钮文字；(3) 让标签铺满按钮矩形；
- * (4) 重算布局并 unpolish/polish 一次，使 QSS 中的 `:checked` 等状态重新求值。
+ * (2) 文本写入标签、清空按钮文字；(3) 触发布局失效与重绘。
+ * 标签的几何完全交由布局管理（Ignored 尺寸策略铺满按钮内容区，见
+ * CarbonRadioTextLabel），这里不再手工 adjustSize/setGeometry——旧实现的
+ * 这两步会与布局重新求值打架，长文本标签被撑出按钮边界导致文字越界。
  * 之所以要"清空按钮文字"，是因为原生 indicator 已压成 0x0，按钮自绘的文字会与
  * 居中标签重叠。
  *
@@ -71,13 +121,13 @@ QLabel* findCenterLabel(QRadioButton* rb)
  */
 void syncStyledRadioText(QRadioButton* rb)
 {
-	if (!rb)
+	if (rb == nullptr)
 	{
 		return;
 	}
 
 	QLabel* centerLabel = findCenterLabel(rb);
-	if (!centerLabel)
+	if (centerLabel == nullptr)
 	{
 		return;
 	}
@@ -91,13 +141,11 @@ void syncStyledRadioText(QRadioButton* rb)
 	centerLabel->setText(buttonText);
 	rb->setText(QString());
 	centerLabel->update();
-	centerLabel->adjustSize();
-	centerLabel->setGeometry(rb->rect());
 	if (QLayout* layout = rb->layout())
 	{
 		layout->invalidate();
 	}
-	if (rb->style())
+	if (rb->style() != nullptr)
 	{
 		rb->style()->unpolish(rb);
 		rb->style()->polish(rb);
@@ -188,21 +236,22 @@ static void setupRadioCommon(QRadioButton* rb, const QString& stylesheet)
 	QString rbText = rb->text();
 	rb->setText("");
 	auto* centerLabel = findCenterLabel(rb);
-	if (!centerLabel)
+	if (centerLabel == nullptr)
 	{
-		centerLabel = new QLabel(rbText, rb);
+		// 省略绘制 + 铺满按钮内容区的文字容器（见 CarbonRadioTextLabel）
+		centerLabel = new CarbonRadioTextLabel(rbText, rb);
 		centerLabel->setObjectName(rb->objectName() + QLatin1String(kCarbonRadioLabelSuffix));
-		centerLabel->setAlignment(Qt::AlignCenter);
-		centerLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 		centerLabel->setStyleSheet("color: #cdcdcd; background-color: transparent; ");
 
 		auto* lay = qobject_cast<QHBoxLayout*>(rb->layout());
-		if (!lay)
+		if (lay == nullptr)
 		{
 			lay = new QHBoxLayout(rb);
 			lay->setContentsMargins(0, 0, 0, 0);
 		}
-		lay->addWidget(centerLabel, 1, Qt::AlignCenter);
+		// 不带对齐地加入：标签铺满整个格子；带对齐的项会被布局按
+		// sizeHint 缩放居中，正是长文本越界的来源
+		lay->addWidget(centerLabel, 1);
 	}
 	else
 	{
@@ -225,7 +274,7 @@ static void setupRadioCommon(QRadioButton* rb, const QString& stylesheet)
 
 void CarbonUIClass::applyRadioStyle(QRadioButton* rb, RadioShape shape, int minWidth)
 {
-	if (!rb) return;
+	if (rb == nullptr) return;
 
 	QString minWidthStr = QString("min-width: %1px; min-height: 24px; ").arg(minWidth);
 

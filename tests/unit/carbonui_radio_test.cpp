@@ -17,6 +17,7 @@
 
 #include <QtCore/QEvent>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QRadioButton>
 
@@ -164,4 +165,86 @@ TEST(RadioStyle, CaptionChangeIsSyncedOnShowEvent)
 
     EXPECT_EQ(label->text(), QStringLiteral("New"));
     EXPECT_TRUE(radio.text().isEmpty());
+}
+
+TEST(RadioStyle, LongCaptionStaysInsideButtonBounds)
+{
+    QRadioButton radio;
+    radio.setObjectName(QStringLiteral("rb"));
+    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_FourRound, 120);
+    QLabel* label = centreLabel(&radio);
+    ASSERT_NE(label, nullptr);
+
+    radio.resize(120, 28);
+    radio.show();
+    QApplication::processEvents();          // 激活布局并让 Resize/Show 同步生效
+
+    // 模拟语言切换：布局稳定后再改长文案（旧实现在这一步让标签被
+    // 文本宽度撑出按钮边界），中英文各来一轮。
+    radio.setText(QStringLiteral("这是一段非常长的中文测试文本，用于验证文字不会越出按钮边界"));
+    QApplication::processEvents();
+    radio.setText(QStringLiteral("and a very long English tail used to overflow both scripts"));
+    QApplication::processEvents();
+
+    EXPECT_GE(label->geometry().left(), radio.rect().left())
+        << "caption label must not extend past the button's left edge";
+    EXPECT_LE(label->geometry().right(), radio.rect().right())
+        << "caption label must not extend past the button's right edge";
+    EXPECT_GE(label->geometry().top(), radio.rect().top());
+    EXPECT_LE(label->geometry().bottom(), radio.rect().bottom());
+}
+
+TEST(RadioStyle, LongCaptionDoesNotInflateButtonInLayout)
+{
+    // 复刻宿主页面结构：HBox(按钮 + 弹性 spacer)，页面常放进 QScrollArea
+    QWidget window;
+    auto* row = new QHBoxLayout(&window);
+    auto* radio = new QRadioButton(&window);
+    radio->setObjectName(QStringLiteral("rb"));
+    row->addWidget(radio);
+    row->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
+    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 120);
+    QLabel* label = centreLabel(radio);
+    ASSERT_NE(label, nullptr);
+
+    window.resize(400, 60);
+    window.show();
+    QApplication::processEvents();
+    const int widthBefore = radio->width();
+
+    // 模拟语言切换：布局稳定后连续改长文案；布局失效需要数轮事件循环
+    // 才能收敛（setText -> 子标签 updateGeometry -> 父布局 LayoutRequest），
+    // 因此每次改文案后泵多轮事件。
+    for (int i = 0; i < 5; ++i)
+    {
+        QApplication::processEvents();
+    }
+    radio->setText(QStringLiteral("这是一段非常长的中文测试文本，用于验证文字不会越出按钮边界"));
+    for (int i = 0; i < 5; ++i)
+    {
+        QApplication::processEvents();
+    }
+    radio->setText(QStringLiteral("and a very long English tail used to overflow both scripts"));
+    for (int i = 0; i < 5; ++i)
+    {
+        QApplication::processEvents();
+    }
+
+    // 机制契约：文字容器必须以 Ignored 尺寸策略铺满按钮内容区（几何完全由
+    // 布局给定，不随文本反推）。旧实现标签是默认 Preferred 策略，长文本会在
+    // 布局失效链的中间态把按钮/标签撑到数百像素宽，绘制恰好落在该状态时
+    // 文字就画到了按钮之外。
+    EXPECT_EQ(label->sizePolicy().horizontalPolicy(), QSizePolicy::Ignored)
+        << "caption label must fill the button (ignored policy), not follow text width";
+    EXPECT_EQ(label->sizePolicy().verticalPolicy(), QSizePolicy::Ignored);
+    // 按钮宽度不得被文案撑大（旧实现：布局最小宽度跟随标签文本宽度，按钮涨到数百像素，
+    // 把所在行撑出滚动区视口）
+    EXPECT_LE(radio->width(), qMax(widthBefore, 130))
+        << "button width must not grow with caption length";
+    // 标签几何必须落在按钮矩形内
+    EXPECT_GE(label->geometry().left(), radio->rect().left());
+    EXPECT_LE(label->geometry().right(), radio->rect().right());
+    // 窗口整体最小宽度不得随文案增长
+    EXPECT_LE(window.minimumSizeHint().width(), 400)
+        << "window minimum width must not follow caption length";
 }
