@@ -57,6 +57,7 @@ set(PROJECT_HEADERS
     include/carbonui_global.h
     include/CarbonUIVersion.h
     include/CarbonUIClass.h
+    include/CarbonUIDialog.h
     include/groupboxcollapser.h
 )
 
@@ -73,6 +74,7 @@ set(PROJECT_SOURCES
     src/CarbonUIClass_QComboBox.cpp
     src/CarbonUIClass_QStatusBar.cpp
     src/CarbonUIClass_QTreeWidget.cpp
+    src/CarbonUIDialog.cpp
     src/groupboxcollapser.cpp
 )
 
@@ -82,8 +84,10 @@ set(PROJECT_UI_FILES
 )
 
 # Qt resource file(s)
+# 文件名以 carbonui_ 开头是有意的：RCC 按 qrc 文件名生成注册符号
+# qInitResources_<name>，消费方常自带 Resource.qrc，同名会撞符号。
 set(PROJECT_RESOURCES
-    Resource.qrc
+    carbonui_rcc.qrc
 )
 
 # Manual Qt processing (no CMAKE_AUTOMOC/AUTOUIC/AUTORCC):

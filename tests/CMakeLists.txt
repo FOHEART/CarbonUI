@@ -89,6 +89,7 @@ add_executable(carbonui_tests
     unit/carbonui_container_test.cpp
     unit/carbonui_tree_test.cpp
     unit/carbonui_radio_test.cpp
+    unit/carbonui_dialog_test.cpp
     unit/groupboxcollapser_test.cpp
     unit/carbonui_cli_smoke_test.cpp
 )

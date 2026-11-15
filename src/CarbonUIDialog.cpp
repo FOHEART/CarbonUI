@@ -1,0 +1,238 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/**
+ * @file  CarbonUIDialog.cpp
+ * @brief CarbonUIDialog 的装配与交互实现（外观契约见 CarbonUIDialog.h）。
+ * @author CarbonUI
+ * @date  2026-11-15
+ * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
+ * @ingroup carbonui
+ *
+ * @details
+ * 结构见 CarbonUIDialog.h 的控件树注释；这里只补充两个实现约定：
+ * - 圆角靠 `WA_TranslucentBackground` + 面板子控件的 `border-radius` 实现，
+ *   四角完全由 QSS 绘制，因此截图（grab）在四角是透明像素——视觉基线按
+ *   ARGB32 保存，跨轮次比对稳定；
+ * - 标题条拖拽只处理落在标题条内的左键，正文区的拖拽（选中文本等）不拦截。
+ *
+ * 线程约定：只在 GUI 主线程使用。
+ */
+
+#include "CarbonUIDialog.h"
+
+#include <QtCore/QEvent>
+#include <QtGui/QFont>
+#include <QtGui/QMouseEvent>
+#include <QtWidgets/QHBoxLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QVBoxLayout>
+
+namespace
+{
+/// 标题条高度（像素），与参考界面一致。
+constexpr int kHeaderHeight = 46;
+/// 面板圆角半径（像素）。
+constexpr int kCornerRadius = 9;
+/// 对话框最小宽度（像素），保证标题与关闭按钮不挤在一起。
+constexpr int kMinimumWidth = 520;
+
+/// 面板 QSS：正文底色 + 圆角 + 1px 黑边。
+const char* const kFrameStyle =
+    "QWidget#CarbonUIDialogFrame { background-color: #212121; border-radius: 9px;"
+    " border: 1px solid #000000; }";
+/// 标题条 QSS：纯黑底 + 上两角圆角（下两角保持直角以贴合正文）。
+const char* const kHeaderStyle =
+    "QWidget#CarbonUIDialogHeader { background-color: #0f0f0f;"
+    " border-top-left-radius: 9px; border-top-right-radius: 9px; }";
+/// 标题标签 QSS：白色加粗。
+const char* const kTitleStyle = "color: #ffffff; background-color: transparent;";
+/// 关闭按钮 QSS：透明底白色 ✕，悬停时淡出浅灰底。
+const char* const kCloseStyle =
+    "QPushButton#CarbonUIDialogClose { background-color: transparent; color: #ffffff;"
+    " border: none; padding: 0px; }"
+    "QPushButton#CarbonUIDialogClose:hover { background-color: #2a2a2a; border-radius: 6px; }";
+/// 信息行 QSS：正文灰（与参考界面取样一致）。
+const char* const kRowStyle = "color: #cdcdcd; background-color: transparent;";
+} // namespace
+
+
+/**
+ * @brief 构造对话框：装配控件树并设置无边框圆角窗口（详见 CarbonUIDialog.h）。
+ * @param[in] title  标题栏文字，可为空串。
+ * @param[in] parent 父窗口指针，可为 NULL。
+ */
+CarbonUIDialog::CarbonUIDialog(const QString& title, QWidget* parent)
+    : QDialog(parent),
+      m_frame(nullptr),
+      m_header(nullptr),
+      m_titleLabel(nullptr),
+      m_closeButton(nullptr),
+      m_body(nullptr),
+      m_bodyLayout(nullptr),
+      m_dragging(false)
+{
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setStyleSheet(QStringLiteral("CarbonUIDialog { background: transparent; }"));
+    setMinimumWidth(kMinimumWidth);
+
+    buildUi();
+    setTitleText(title);
+}
+
+/**
+ * @brief 装配面板 / 标题条 / 正文区三层控件树（仅构造时调用）。
+ */
+void CarbonUIDialog::buildUi()
+{
+    auto* rootLayout = new QVBoxLayout(this);
+    rootLayout->setContentsMargins(0, 0, 0, 0);
+    rootLayout->setSpacing(0);
+
+    m_frame = new QWidget(this);
+    m_frame->setObjectName(QStringLiteral("CarbonUIDialogFrame"));
+    m_frame->setStyleSheet(QLatin1String(kFrameStyle));
+    rootLayout->addWidget(m_frame);
+
+    auto* frameLayout = new QVBoxLayout(m_frame);
+    frameLayout->setContentsMargins(0, 0, 0, 0);
+    frameLayout->setSpacing(0);
+
+    // 标题条：左标题 + 弹性空间 + 右关闭按钮
+    m_header = new QWidget(m_frame);
+    m_header->setObjectName(QStringLiteral("CarbonUIDialogHeader"));
+    m_header->setStyleSheet(QLatin1String(kHeaderStyle));
+    m_header->setFixedHeight(kHeaderHeight);
+    auto* headerLayout = new QHBoxLayout(m_header);
+    headerLayout->setContentsMargins(26, 0, 14, 0);
+    headerLayout->setSpacing(8);
+
+    m_titleLabel = new QLabel(m_header);
+    m_titleLabel->setObjectName(QStringLiteral("CarbonUIDialogTitle"));
+    m_titleLabel->setStyleSheet(QLatin1String(kTitleStyle));
+    QFont titleFont = m_titleLabel->font();
+    titleFont.setBold(true);
+    titleFont.setPointSize(11);
+    titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    m_titleLabel->setFont(titleFont);
+    headerLayout->addWidget(m_titleLabel);
+    headerLayout->addStretch(1);
+
+    m_closeButton = new QPushButton(QString::fromUtf8("\xE2\x9C\x95"), m_header);
+    m_closeButton->setObjectName(QStringLiteral("CarbonUIDialogClose"));
+    m_closeButton->setStyleSheet(QLatin1String(kCloseStyle));
+    m_closeButton->setCursor(Qt::PointingHandCursor);
+    m_closeButton->setFlat(true);
+    m_closeButton->setFixedSize(30, 30);
+    headerLayout->addWidget(m_closeButton, 0, Qt::AlignVCenter);
+    QObject::connect(m_closeButton, &QPushButton::clicked, this, &QDialog::reject);
+
+    frameLayout->addWidget(m_header);
+
+    // 正文区：逐行追加 "名称: 取值"
+    m_body = new QWidget(m_frame);
+    m_body->setObjectName(QStringLiteral("CarbonUIDialogBody"));
+    // 纵向节奏对齐参考界面：正文首行距标题条 26px，行与行之间 32px，底部留白 32px
+    m_bodyLayout = new QVBoxLayout(m_body);
+    m_bodyLayout->setContentsMargins(26, 26, 26, 32);
+    m_bodyLayout->setSpacing(32);
+    frameLayout->addWidget(m_body, 1);
+}
+
+/**
+ * @brief 更新标题文字（详见 CarbonUIDialog.h）。
+ * @param[in] title 新标题，可为空串。
+ */
+void CarbonUIDialog::setTitleText(const QString& title)
+{
+    if (m_titleLabel != nullptr)
+    {
+        m_titleLabel->setText(title);
+    }
+}
+
+/**
+ * @brief 查询标题文字（详见 CarbonUIDialog.h）。
+ * @return 标题标签当前文本。
+ */
+QString CarbonUIDialog::titleText() const
+{
+    return m_titleLabel != nullptr ? m_titleLabel->text() : QString();
+}
+
+/**
+ * @brief 追加 "名称: 取值" 信息行（详见 CarbonUIDialog.h）。
+ * @param[in] label 行名称，可为空串。
+ * @param[in] value 行取值，可为空串。
+ */
+void CarbonUIDialog::addInfoRow(const QString& label, const QString& value)
+{
+    addInfoRow(QStringLiteral("%1: %2").arg(label, value));
+}
+
+/**
+ * @brief 追加原样文本信息行（详见 CarbonUIDialog.h）。
+ * @param[in] text 行文本，可为空串。
+ */
+void CarbonUIDialog::addInfoRow(const QString& text)
+{
+    if (m_bodyLayout == nullptr)
+    {
+        return;
+    }
+
+    auto* row = new QLabel(text, m_body);
+    row->setObjectName(QStringLiteral("CarbonUIDialogRow"));
+    row->setStyleSheet(QLatin1String(kRowStyle));
+    QFont rowFont = row->font();
+    rowFont.setPointSize(10);
+    row->setFont(rowFont);
+    m_bodyLayout->addWidget(row);
+}
+
+/**
+ * @brief 记录标题条拖拽起点（详见 CarbonUIDialog.h）。
+ * @param[in] event 鼠标事件，不可为 NULL。
+ */
+void CarbonUIDialog::mousePressEvent(QMouseEvent* event)
+{
+    if (event != nullptr && event->button() == Qt::LeftButton && m_header != nullptr
+        && m_header->geometry().contains(event->pos()))
+    {
+        m_dragging = true;
+        m_dragOffset = event->globalPos() - frameGeometry().topLeft();
+        event->accept();
+        return;
+    }
+    QDialog::mousePressEvent(event);
+}
+
+/**
+ * @brief 拖拽移动窗口（详见 CarbonUIDialog.h）。
+ * @param[in] event 鼠标事件，不可为 NULL。
+ */
+void CarbonUIDialog::mouseMoveEvent(QMouseEvent* event)
+{
+    if (m_dragging && event != nullptr)
+    {
+        move(event->globalPos() - m_dragOffset);
+        event->accept();
+        return;
+    }
+    QDialog::mouseMoveEvent(event);
+}
+
+/**
+ * @brief 结束拖拽（详见 CarbonUIDialog.h）。
+ * @param[in] event 鼠标事件，不可为 NULL。
+ */
+void CarbonUIDialog::mouseReleaseEvent(QMouseEvent* event)
+{
+    m_dragging = false;
+    QDialog::mouseReleaseEvent(event);
+}

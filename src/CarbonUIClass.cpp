@@ -45,6 +45,25 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QLabel>
 
+/**
+ * @brief 注册子库内嵌资源（下拉箭头、树分支箭头等图片）。
+ *
+ * @details
+ * 静态库里的 qrc 目标只有在注册符号被引用时才会被链接器从 .lib 中取出；
+ * 没有这层显式引用时，`QComboBox::down-arrow` 的 url(:/img/...) 会在运行时
+ * 解析为空图片（箭头不显示），而且不会报错。这里用构造期函数引用
+ * qInitResources_carbonui_rcc，保证库一被链接资源就注册（幂等）。
+ *
+ * @note 必须放在文件级 static 函数里（不能放进匿名命名空间）：Q_INIT_RESOURCE
+ *       展开的 extern 声明会被匿名命名空间改写成内部链接符号，导致链接失败。
+ */
+static void carbonuiRegisterResources()
+{
+    Q_INIT_RESOURCE(carbonui_rcc);
+}
+
+Q_CONSTRUCTOR_FUNCTION(carbonuiRegisterResources)
+
 
 void CarbonUIClass::applyTooltipStyle(void)
 {

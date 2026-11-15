@@ -121,7 +121,7 @@ TEST(ComboBoxStyle, UsesRoundedFieldAndResourceArrow)
 
     EXPECT_QSS_CONTAINS(combo.styleSheet(), "border-radius: 12px");
     EXPECT_QSS_CONTAINS(combo.styleSheet(), "QComboBox::drop-down");
-    // Resource.qrc maps prefix "/img", see the documented resource convention
+    // carbonui_rcc.qrc maps prefix "/img", see the documented resource convention
     EXPECT_QSS_CONTAINS(combo.styleSheet(), ":/img/Resources/img/arrow_down.png");
 }
 

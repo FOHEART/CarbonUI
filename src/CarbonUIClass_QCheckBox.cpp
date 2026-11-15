@@ -289,6 +289,13 @@ void applyCheckStyleIndicatorRight(QCheckBox* cb)
     lay->addWidget(label, 1);
     lay->addWidget(ring, 0, Qt::AlignVCenter);
 
+    // QAbstractButton::sizeHint 只按文字/图标算，忽略子布局：文字搬进子标签后
+    // sizeHint 退化为 0x0，复选框在布局里会变成看不见的一条（app 截图基线曾
+    // 捕获过）。这里显式给最小高度撑开行高，水平方向 Expanding 让圆环贴到
+    // 分组右侧，实现"多项上下排列时圆点右对齐"。
+    cb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    cb->setMinimumHeight(24);
+
     auto setDotStyle = [dot](bool checked)
     {
         dot->setStyleSheet(

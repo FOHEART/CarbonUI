@@ -21,6 +21,9 @@
  */
 
 #include "CarbonUIClass.h"
+#include <QtGui/QColor>
+#include <QtGui/QPalette>
+#include <QtWidgets/QTabBar>
 
 
 void CarbonUIClass::setupTabWidgetStyle(QTabWidget* tw)
@@ -28,8 +31,13 @@ void CarbonUIClass::setupTabWidgetStyle(QTabWidget* tw)
     if (!tw) return;
 
     QString style =
+        // QTabWidget 自身也要给底色：页签栏不铺满全宽时，右侧露出的是宿主控件的
+        // palette Window 色（浅色），必须压成页签底色。
+        "QTabWidget { background-color: #272727; }"
         "QTabWidget::pane { background: #3b3b3b; border-radius: 0px; border: 1px solid #2b2b2b; }"
-        "QTabBar { padding-right: 66px; }"
+        // 页签栏自身的底色必须显式给：否则右侧未占用的滚动区会露出 palette 的浅色，
+        // 在深色主题里是一块刺眼的白条（已由 app 截图基线 app-tab-* 覆盖）。
+        "QTabBar { background-color: #272727; padding-right: 66px; }"
         "QTabBar::tab { background: #272727; color: #575757; padding: 8px 20px; margin-right: 0px; margin-top: 0px; border: none; }"
         "QTabBar::tab:selected { background: #2e2e2e; color: #cdcdcd; }"
         "QTabBar::scroller { background-color: transparent; }"

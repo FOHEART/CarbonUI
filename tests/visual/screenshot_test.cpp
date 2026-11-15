@@ -45,6 +45,7 @@
 #include <QtWidgets/QWidget>
 
 #include "CarbonUIClass.h"
+#include "CarbonUIDialog.h"
 #include "groupboxcollapser.h"
 #include "screenshot_support.h"
 
@@ -261,4 +262,19 @@ TEST(Screenshot, GroupBoxCollapsedMatchesBaseline)
     box->setGeometry(10, 10, 240, box->sizeHint().height());
 
     CARBONUI_CHECK_SCREENSHOT(host, "groupbox-collapsed");
+}
+
+TEST(Screenshot, DialogAboutMatchesBaseline)
+{
+    // CarbonUIDialog 自带圆角透明窗，直接抓它本身（不再套品红父容器）。
+    auto* dialog = new CarbonUIDialog(QStringLiteral("ABOUT"));
+    dialog->addInfoRow(QStringLiteral("Application revision number"),
+                       QStringLiteral("2109c6b5729501538b788d424a783067a175beca"));
+    dialog->addInfoRow(QStringLiteral("Application date"),
+                       QStringLiteral("Tue Jul 29 10:38:14 2025"));
+    dialog->addInfoRow(QStringLiteral("Program version"), QStringLiteral("2025.2"));
+    dialog->addInfoRow(QStringLiteral("License"), QStringLiteral("Perpetual"));
+    dialog->adjustSize();
+
+    CARBONUI_CHECK_SCREENSHOT(dialog, "dialog-about");
 }

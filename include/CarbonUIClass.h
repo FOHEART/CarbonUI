@@ -219,7 +219,7 @@ public:
      *
      * @param[in,out] cb 目标下拉框，**可为 NULL**，为 NULL 时直接返回。
      * @note 箭头图片来源为 `:/img/Resources/img/arrow_down.png`，
-     *       依赖 `Resource.qrc` 的前缀 `/img`。
+     *       依赖 `carbonui_rcc.qrc` 的前缀 `/img`。
      */
     static void setupComboBoxStyle(QComboBox* cb);
 
@@ -246,7 +246,7 @@ public:
      *
      * @param[in,out] view 目标树视图，**可为 NULL**，为 NULL 时直接返回；
      *                     可传入 QTreeWidget 等子类实例。
-     * @note 展开/收起箭头的图片路径为 `:/images/...`，与 `Resource.qrc` 的
+     * @note 展开/收起箭头的图片路径为 `:/images/...`，与 `carbonui_rcc.qrc` 的
      *       `/img` 前缀不一致，资源不存在时箭头不显示（不影响其它属性）。
      */
     static void applyTreeViewStyle(QTreeView* view);
