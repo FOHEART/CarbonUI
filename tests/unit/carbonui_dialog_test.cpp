@@ -18,7 +18,9 @@
  * - 标题标签 / 关闭按钮按 objectName 可查，标题可改、可读回；
  * - addInfoRow 生成 "名称: 取值" 行，行数随追加递增；
  * - 关闭按钮走 reject 路径，对话框隐藏；
- * - 标题条左键按下会进入拖拽状态（以窗口几何变化观察）。
+ * - 标题条左键按下会进入拖拽状态（以窗口几何变化观察）；
+ * - 最小化 / 最大化按钮默认隐藏，可独立开关；最大化按钮切换窗口状态并在
+ *   最大化期间把面板圆角归零、字形换成还原形。
  */
 
 #include <gtest/gtest.h>
@@ -132,4 +134,81 @@ TEST(CarbonUIDialogTest, DraggingTheHeaderMovesTheDialog)
 
     EXPECT_EQ(dialog.pos(), start + QPoint(40, 25))
         << "holding the header must drag the frameless window";
+}
+
+TEST(CarbonUIDialogTest, WindowButtonsAreHiddenByDefault)
+{
+    CarbonUIDialog dialog(QStringLiteral("ABOUT"));
+
+    auto* minimize = dialog.findChild<QPushButton*>(QStringLiteral("CarbonUIDialogMinimize"));
+    auto* maximize = dialog.findChild<QPushButton*>(QStringLiteral("CarbonUIDialogMaximize"));
+    ASSERT_NE(minimize, nullptr) << "minimize button 'CarbonUIDialogMinimize' is missing";
+    ASSERT_NE(maximize, nullptr) << "maximize button 'CarbonUIDialogMaximize' is missing";
+
+    EXPECT_TRUE(minimize->isHidden()) << "minimize button must start hidden";
+    EXPECT_TRUE(maximize->isHidden()) << "maximize button must start hidden";
+    EXPECT_FALSE(minimize->text().isEmpty()) << "minimize button must show a glyph";
+    EXPECT_FALSE(maximize->text().isEmpty()) << "maximize button must show a glyph";
+    EXPECT_FALSE(dialog.isMinimizeButtonVisible());
+    EXPECT_FALSE(dialog.isMaximizeButtonVisible());
+}
+
+TEST(CarbonUIDialogTest, MinimizeAndMaximizeVisibilityAreIndependent)
+{
+    CarbonUIDialog dialog(QStringLiteral("ABOUT"));
+
+    dialog.setMinimizeButtonVisible(true);
+    EXPECT_TRUE(dialog.isMinimizeButtonVisible());
+    EXPECT_FALSE(dialog.isMaximizeButtonVisible()) << "enabling minimize must not enable maximize";
+
+    dialog.setMaximizeButtonVisible(true);
+    EXPECT_TRUE(dialog.isMinimizeButtonVisible());
+    EXPECT_TRUE(dialog.isMaximizeButtonVisible());
+
+    dialog.setMinimizeButtonVisible(false);
+    EXPECT_FALSE(dialog.isMinimizeButtonVisible());
+    EXPECT_TRUE(dialog.isMaximizeButtonVisible())
+        << "disabling minimize must leave maximize untouched";
+}
+
+TEST(CarbonUIDialogTest, MaximizeButtonTogglesWindowStateAndGlyph)
+{
+    CarbonUIDialog dialog(QStringLiteral("ABOUT"));
+    dialog.setMaximizeButtonVisible(true);
+    dialog.show();
+
+    auto* maximize = dialog.findChild<QPushButton*>(QStringLiteral("CarbonUIDialogMaximize"));
+    auto* frame = dialog.findChild<QWidget*>(QStringLiteral("CarbonUIDialogFrame"));
+    auto* header = dialog.findChild<QWidget*>(QStringLiteral("CarbonUIDialogHeader"));
+    ASSERT_NE(maximize, nullptr);
+    ASSERT_NE(frame, nullptr);
+    ASSERT_NE(header, nullptr);
+
+    const QString maximizeGlyph = maximize->text();
+
+    maximize->click();
+    EXPECT_TRUE(dialog.isMaximized()) << "clicking maximize must maximize the dialog";
+    EXPECT_NE(maximize->text(), maximizeGlyph) << "maximize button must switch to a restore glyph";
+    EXPECT_TRUE(frame->styleSheet().contains(QStringLiteral("border-radius: 0px")))
+        << "a maximized frameless dialog must drop its rounded corners";
+    EXPECT_TRUE(header->styleSheet().contains(QStringLiteral("border-top-left-radius: 0px")));
+
+    maximize->click();
+    EXPECT_FALSE(dialog.isMaximized()) << "clicking again must restore the normal state";
+    EXPECT_EQ(maximize->text(), maximizeGlyph);
+    EXPECT_TRUE(frame->styleSheet().contains(QStringLiteral("border-radius: 9px")));
+}
+
+TEST(CarbonUIDialogTest, MinimizeButtonMinimizesTheDialog)
+{
+    CarbonUIDialog dialog(QStringLiteral("ABOUT"));
+    dialog.setMinimizeButtonVisible(true);
+    dialog.show();
+
+    auto* minimize = dialog.findChild<QPushButton*>(QStringLiteral("CarbonUIDialogMinimize"));
+    ASSERT_NE(minimize, nullptr);
+
+    minimize->click();
+
+    EXPECT_TRUE(dialog.isMinimized()) << "clicking minimize must minimize the dialog";
 }

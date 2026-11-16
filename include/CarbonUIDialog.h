@@ -14,19 +14,26 @@
  *
  * @details
  * 复刻 CarbonUI 产品线里的 About 对话框外观：无系统边框（FramelessWindowHint）、
- * 9px 圆角深色面板，顶部 46px 纯黑标题条（左侧白色加粗标题、右侧白色关闭
- * 按钮），下方 \#212121 正文区按行排布 "名称: 取值" 文本。颜色取自界面规范：
+ * 9px 圆角深色面板，顶部 46px 纯黑标题条（左侧白色加粗标题、右侧窗口按钮），
+ * 下方 \#212121 正文区按行排布 "名称: 取值" 文本。颜色取自界面规范：
  * 标题条 \#0f0f0f、正文 \#212121、标题 \#ffffff、行文本 \#cdcdcd。
  *
  * 与 CarbonUIQ* 控件类（CarbonUIQPushButton 等）同一实现范式：外观与结构都由
- * 控件自己负责。与之不同的是，本类还包含交互（圆角透明窗、标题拖拽移动、关闭
- * 按钮），调用方只需构造 + 追加行 + show()/exec()。
+ * 控件自己负责。与之不同的是，本类还包含交互（圆角透明窗、标题拖拽移动、
+ * 最小化 / 最大化 / 关闭按钮），调用方只需构造 + 追加行 + show()/exec()。
+ *
+ * 标题条右侧固定按"最小化 → 最大化 → 关闭"排列三个窗口按钮。最小化与最大化
+ * 按钮默认隐藏（保持只有关闭按钮的经典外观），用
+ * @ref setMinimizeButtonVisible / @ref setMaximizeButtonVisible 分别控制是否
+ * 显示，互不影响。
  *
  * 用法示例：
  * @code
  * auto* dlg = new CarbonUIDialog(QStringLiteral("ABOUT"), parent);
  * dlg->addInfoRow(QStringLiteral("Program version"), QStringLiteral("2025.2"));
  * dlg->addInfoRow(QStringLiteral("License"), QStringLiteral("Perpetual"));
+ * dlg->setMaximizeButtonVisible(true);   // 只要最大化
+ * dlg->setMinimizeButtonVisible(false);  // 不要最小化（默认即隐藏）
  * dlg->exec();
  * @endcode
  *
@@ -42,6 +49,7 @@
 #include <QtCore/QString>
 #include <QtWidgets/QDialog>
 
+class QEvent;
 class QLabel;
 class QPushButton;
 class QVBoxLayout;
@@ -56,16 +64,20 @@ class QWidget;
  * CarbonUIDialog (FramelessWindowHint, 圆角透明窗)
  *  └─ QWidget "CarbonUIDialogFrame"      #212121 面板, 9px 圆角, 1px 黑边
  *      ├─ QWidget "CarbonUIDialogHeader" #0f0f0f 标题条, 固定高 46px
- *      │   ├─ QLabel "CarbonUIDialogTitle"   白色加粗标题
- *      │   └─ QPushButton "CarbonUIDialogClose" 白色 ✕，点击关闭
+ *      │   ├─ QLabel "CarbonUIDialogTitle"     白色加粗标题
+ *      │   ├─ QPushButton "CarbonUIDialogMinimize" 白色 —，默认隐藏
+ *      │   ├─ QPushButton "CarbonUIDialogMaximize" 白色 □/❐，默认隐藏
+ *      │   └─ QPushButton "CarbonUIDialogClose"    白色 ✕，点击关闭
  *      └─ QWidget "CarbonUIDialogBody"   正文区
  *          ├─ QLabel "CarbonUIDialogRow" ×N   "名称: 取值"
  *          └─ ...
  * @endcode
  *
  * 交互：按住标题条可拖动窗口（无系统边框时的补偿）；Esc 与关闭按钮都走
- * QDialog 默认的 reject 路径。默认尺寸由内容与 @c minimumWidth 共同决定
- *（`adjustSize()` 后取 sizeHint）。
+ * QDialog 默认的 reject 路径。最小化按钮调用 `showMinimized()`；最大化按钮在
+ * `showMaximized()` 与 `showNormal()` 之间切换，字形随状态在 □ / ❐ 间变化，
+ * 最大化期间面板圆角归零（避免四角露出透明像素）且标题条不再可拖拽。
+ * 默认尺寸由内容与 @c minimumWidth 共同决定（`adjustSize()` 后取 sizeHint）。
  */
 class CARBONUI_DLL_API CarbonUIDialog : public QDialog
 {
@@ -91,6 +103,42 @@ public:
      * @return 标题标签的当前文本，可能为空串。
      */
     QString titleText() const;
+
+    /**
+     * @brief 显示或隐藏标题条右上角的最小化按钮。
+     *
+     * @details
+     * 默认隐藏，因此不调用本接口时对话框外观与只有关闭按钮的旧版本一致。
+     * 按钮位于最大化与关闭按钮左侧，点击后调用 `showMinimized()`；本接口
+     * 只影响最小化按钮，与最大化按钮互不影响。
+     *
+     * @param[in] visible true 显示，false 隐藏。
+     */
+    void setMinimizeButtonVisible(bool visible);
+
+    /**
+     * @brief 查询最小化按钮是否显示。
+     * @return 未被显式隐藏时返回 true（对话框自身尚未 show 时同样如此）。
+     */
+    bool isMinimizeButtonVisible() const;
+
+    /**
+     * @brief 显示或隐藏标题条右上角的最大化按钮。
+     *
+     * @details
+     * 默认隐藏。按钮位于最小化按钮与关闭按钮之间，点击后在最大化与还原之间
+     * 切换；最大化时字形变为 "❐"（还原），并取消面板圆角、禁止拖动标题条。
+     *
+     * @param[in] visible true 显示，false 隐藏；隐藏时若正处于最大化状态不会
+     *                    自动还原。
+     */
+    void setMaximizeButtonVisible(bool visible);
+
+    /**
+     * @brief 查询最大化按钮是否显示。
+     * @return 未被显式隐藏时返回 true（对话框自身尚未 show 时同样如此）。
+     */
+    bool isMaximizeButtonVisible() const;
 
     /**
      * @brief 追加一行 "名称: 取值" 信息行。
@@ -130,13 +178,24 @@ protected:
      */
     void mouseReleaseEvent(QMouseEvent* event) override;
 
+    /**
+     * @brief 窗口状态变化时刷新最大化字形与面板圆角。
+     * @param[in] event 事件对象；只处理 WindowStateChange，其余转交基类。
+     */
+    void changeEvent(QEvent* event) override;
+
 private:
     /// @brief 装配控件树与样式（仅构造时调用一次）。
     void buildUi();
 
+    /// @brief 按当前窗口状态刷新面板/标题条圆角与最大化按钮字形。
+    void syncWindowState();
+
     QWidget* m_frame;          ///< 圆角面板容器（objectName: CarbonUIDialogFrame）。
     QWidget* m_header;         ///< 标题条（objectName: CarbonUIDialogHeader），不取得所有权。
     QLabel* m_titleLabel;      ///< 标题标签（objectName: CarbonUIDialogTitle），不取得所有权。
+    QPushButton* m_minimizeButton; ///< 最小化按钮（objectName: CarbonUIDialogMinimize），默认隐藏。
+    QPushButton* m_maximizeButton; ///< 最大化按钮（objectName: CarbonUIDialogMaximize），默认隐藏。
     QPushButton* m_closeButton;///< 关闭按钮（objectName: CarbonUIDialogClose），不取得所有权。
     QWidget* m_body;           ///< 正文容器（objectName: CarbonUIDialogBody），不取得所有权。
     QVBoxLayout* m_bodyLayout; ///< 正文行布局，不取得所有权。
