@@ -35,6 +35,8 @@
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
+#include <QtWidgets/QScrollArea>
+#include <QtWidgets/QScrollBar>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QTreeWidgetItem>
@@ -45,6 +47,8 @@
 #include "CarbonUIQLineEdit.h"
 #include "CarbonUIQPushButton.h"
 #include "CarbonUIQRadioButton.h"
+#include "CarbonUIQScrollArea.h"
+#include "CarbonUIQScrollBar.h"
 #include "CarbonUIQTabWidget.h"
 #include "CarbonUIQTreeWidget.h"
 #include "groupboxcollapser.h"
@@ -62,6 +66,12 @@ const QString kSurface = QStringLiteral("#2f2f2f");
 const QString kPanel = QStringLiteral("#272727");
 /// 父容器的识别色，只用于证明"圆角外透出了父容器"。
 const QString kBackdrop = QStringLiteral("#ff00ff");
+/// 滚动条轨道色（CarbonUIQScrollBar 外观契约）。
+const QString kScrollBarTrack = QStringLiteral("#2e2e2e");
+/// 滚动条滑块色（CarbonUIQScrollBar 外观契约）。
+const QString kScrollBarHandle = QStringLiteral("#999999");
+/// 滚动区内容底色（CarbonUIQScrollArea 外观契约）。
+const QString kScrollContent = QStringLiteral("#3b3b3b");
 
 /**
  * @brief 建一个刷成 \#ff00ff 的父容器，作为渲染用例的取景框。
@@ -375,4 +385,140 @@ TEST(RenderEvidence, ExpandedGroupBoxPaintsBodyCollapsedOneDoesNot)
 
     delete expandedHost;
     delete collapsedHost;
+}
+
+TEST(RenderEvidence, VerticalScrollBarRendersTrackAndHandle)
+{
+    QWidget* host = makeBackdrop(80, 160);
+    auto* bar = new QScrollBar(Qt::Vertical, host);
+    // 命中范围 8px（x=28..35），常态只画中间 4px（x=30..33）
+    bar->setGeometry(28, 20, 8, 120);
+    CarbonUIQScrollBar::applyStyle(bar);
+    // value=0：滑块贴条首（长度约 page/总量的 1/3），条尾留出整段轨道。
+    bar->setRange(0, 100);
+    bar->setPageStep(50);
+    bar->setValue(0);
+
+    const QImage image =
+        carbonui_test::renderToArtifact(host, QStringLiteral("14-scrollbar-vertical.png"));
+    ASSERT_FALSE(image.isNull());
+    delete host;
+
+    // 滑块贴条首（条首 40px），条尾是轨道：颜色与参考图取样一致。
+    EXPECT_EQ(carbonui_test::pixelName(image, 31, 40), kScrollBarHandle)
+        << "the handle must be painted #999999";
+    EXPECT_EQ(carbonui_test::pixelName(image, 31, 120), kScrollBarTrack)
+        << "the groove below the handle must be painted #2e2e2e";
+    EXPECT_EQ(carbonui_test::pixelName(image, 31, 136), kScrollBarTrack)
+        << "the groove must extend to the end of the bar";
+    // 命中范围两侧各 2px 透明留白：常态绘制厚度只有 4px，留白处透出品红容器。
+    EXPECT_EQ(carbonui_test::pixelName(image, 29, 80), kBackdrop)
+        << "the left 2px of the hit area must stay transparent in normal state";
+    EXPECT_EQ(carbonui_test::pixelName(image, 34, 80), kBackdrop)
+        << "the right 2px of the hit area must stay transparent in normal state";
+    // 条外仍是品红容器。
+    EXPECT_EQ(carbonui_test::pixelName(image, 26, 80), kBackdrop)
+        << "columns left of the bar must show the backdrop";
+}
+
+TEST(RenderEvidence, HoveredScrollBarFillsWholeHitArea)
+{
+    QWidget* host = makeBackdrop(80, 160);
+    auto* bar = new QScrollBar(Qt::Vertical, host);
+    bar->setGeometry(28, 20, 8, 120);
+    CarbonUIQScrollBar::applyStyle(bar);
+    bar->setRange(0, 100);
+    bar->setPageStep(50);
+    bar->setValue(0);
+
+    // Enter 让控件进入 hover 态（underMouse = true），QSS 的 :hover 规则随之生效：
+    // 两侧各 2px 的透明留白归零，整条 8px 上色。
+
+    QEvent enter(QEvent::Enter);
+    QApplication::sendEvent(bar, &enter);
+    ASSERT_TRUE(bar->underMouse()) << "the bar must be in hover state for this case";
+
+    const QImage image =
+        carbonui_test::renderToArtifact(host, QStringLiteral("17-scrollbar-hover.png"));
+    ASSERT_FALSE(image.isNull());
+    delete host;
+
+    // 常态透明的那两列，悬停时也被轨道填满 → 绘制厚度从 4px 变成 8px
+    EXPECT_EQ(carbonui_test::pixelName(image, 29, 80), kScrollBarTrack)
+        << "on hover the left inset must be painted as groove";
+    EXPECT_EQ(carbonui_test::pixelName(image, 34, 80), kScrollBarTrack)
+        << "on hover the right inset must be painted as groove";
+    // 命中范围的边缘仍是条内，范围外才是品红容器（几何没有变化）
+    EXPECT_EQ(carbonui_test::pixelName(image, 28, 80), kScrollBarTrack);
+    EXPECT_EQ(carbonui_test::pixelName(image, 35, 80), kScrollBarTrack);
+    EXPECT_EQ(carbonui_test::pixelName(image, 26, 80), kBackdrop)
+        << "the hit area must not grow the widget geometry";
+}
+
+TEST(RenderEvidence, HorizontalScrollBarRendersTrackAndHandle)
+{
+    QWidget* host = makeBackdrop(160, 80);
+    auto* bar = new QScrollBar(Qt::Horizontal, host);
+    // 命中范围 8px（y=28..35），常态只画中间 4px（y=30..33）
+    bar->setGeometry(20, 28, 120, 8);
+    CarbonUIQScrollBar::applyStyle(bar);
+    // 与垂直条同参数：value=0，滑块贴条首。
+    bar->setRange(0, 100);
+    bar->setPageStep(50);
+    bar->setValue(0);
+
+    const QImage image =
+        carbonui_test::renderToArtifact(host, QStringLiteral("15-scrollbar-horizontal.png"));
+    ASSERT_FALSE(image.isNull());
+    delete host;
+
+    // 与垂直条同一套契约，只是方向对调。
+    EXPECT_EQ(carbonui_test::pixelName(image, 40, 31), kScrollBarHandle)
+        << "the handle must be painted #999999";
+    EXPECT_EQ(carbonui_test::pixelName(image, 130, 31), kScrollBarTrack)
+        << "the groove right of the handle must be painted #2e2e2e";
+    EXPECT_EQ(carbonui_test::pixelName(image, 136, 31), kScrollBarTrack)
+        << "the groove must extend to the end of the bar";
+    EXPECT_EQ(carbonui_test::pixelName(image, 80, 29), kBackdrop)
+        << "the upper 2px of the hit area must stay transparent in normal state";
+    EXPECT_EQ(carbonui_test::pixelName(image, 80, 34), kBackdrop)
+        << "the lower 2px of the hit area must stay transparent in normal state";
+    EXPECT_EQ(carbonui_test::pixelName(image, 80, 26), kBackdrop)
+        << "rows above the bar must show the backdrop";
+}
+
+TEST(RenderEvidence, ScrollAreaShowsThinScrollBarInsideViewport)
+{
+    QWidget* host = makeBackdrop(160, 160);
+    auto* area = new QScrollArea(host);
+    area->setGeometry(0, 0, 160, 160);
+    CarbonUIQScrollArea::applyStyle(area);
+    auto* content = new QWidget;
+    content->resize(600, 600); // 两个方向都超出视口：垂直与水平滚动条同时出现
+    area->setWidget(content);
+
+    const QImage image =
+        carbonui_test::renderToArtifact(host, QStringLiteral("16-scrollbar-in-scrollarea.png"));
+    ASSERT_FALSE(image.isNull());
+    delete host;
+
+    // 滚动条占 8px（横向 x=152..159，纵向 y=152..159），常态只画中间 4px。
+    // value=0 时滑块贴条首：条首是滑块、条尾是轨道。
+    EXPECT_EQ(carbonui_test::pixelName(image, 155, 10), kScrollBarHandle)
+        << "the vertical handle must sit at the start of the bar";
+    EXPECT_EQ(carbonui_test::pixelName(image, 155, 150), kScrollBarTrack)
+        << "the vertical groove must be painted #2e2e2e";
+    EXPECT_EQ(carbonui_test::pixelName(image, 151, 150), kScrollContent)
+        << "the vertical scrollbar must occupy 8px starting at x=152";
+    EXPECT_NE(carbonui_test::pixelName(image, 153, 150), kScrollBarTrack)
+        << "the vertical bar must only paint its middle 4px in normal state";
+    // 水平条贴下缘，纵向 y=152..159，常态只画中间 4px（y=154..157）。
+    EXPECT_EQ(carbonui_test::pixelName(image, 10, 155), kScrollBarHandle)
+        << "the horizontal handle must sit at the start of the bar";
+    EXPECT_EQ(carbonui_test::pixelName(image, 150, 155), kScrollBarTrack)
+        << "the horizontal groove must be painted #2e2e2e";
+    EXPECT_EQ(carbonui_test::pixelName(image, 150, 151), kScrollContent)
+        << "the horizontal scrollbar must occupy 8px starting at y=152";
+    EXPECT_NE(carbonui_test::pixelName(image, 150, 153), kScrollBarTrack)
+        << "the horizontal bar must only paint its middle 4px in normal state";
 }

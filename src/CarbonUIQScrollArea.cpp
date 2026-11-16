@@ -13,14 +13,20 @@
  * @ingroup carbonui
  *
  * @details
- * 无边框、内容底 \#3b3b3b，纵向滚动条收窄到 4px（\#cdcdcd 滑块、无加减页与
- * 上下箭头按钮）。
+ * 滚动区本体只负责"无边框 + 内容底 #3b3b3b"；滚动条外观统一委托给
+ * CarbonUIQScrollBar::applyStyle()（2px 细条、悬停加厚到 4px，垂直与水平
+ * 同一套规则），保证滚动条样式全工程只有一个来源。
+ *
+ * 注意：滚动条样式必须刷在 QScrollBar 对象自己的样式表上，而不是写在
+ * QScrollArea 的样式表里——控件自身样式表的优先级高于祖先样式表，且
+ * QScrollArea 的 "QScrollArea QWidget { ... }" 通配规则也会命中滚动条，
+ * 委托写法可以让滚动条规则稳定压过通配规则。
  *
  * 线程约定：只在 GUI 主线程使用。
  */
 
 #include "CarbonUIQScrollArea.h"
-#include <QtWidgets/QScrollBar>
+#include "CarbonUIQScrollBar.h"
 
 /**
  * @brief 构造滚动区并完成外观装配（详见 CarbonUIQScrollArea.h）。
@@ -37,20 +43,10 @@ void CarbonUIQScrollArea::applyStyle(QScrollArea* area) {
 		return;
 	}
 
-	area->setStyleSheet(
-	    "QScrollArea { border: none; }"
-	    "QScrollArea QWidget { background-color: #3b3b3b; }"
-	    "QScrollArea QScrollBar:vertical { width: 4px; background: transparent; margin: 0px; }"
-	    "QScrollArea QScrollBar::handle:vertical { background: #cdcdcd; min-height: 20px; "
-	    "border-radius: 4px; }"
-	    "QScrollArea QScrollBar::add-line:vertical, QScrollArea QScrollBar::sub-line:vertical { "
-	    "height: 0px; }"
-	    "QScrollArea QScrollBar::add-page:vertical, QScrollArea QScrollBar::sub-page:vertical { "
-	    "background: none; }");
+	area->setStyleSheet("QScrollArea { border: none; }"
+	                    "QScrollArea QWidget { background-color: #3b3b3b; }");
 
-	// ensure scrollbars have minimal width
-	QScrollBar* verticalBar = area->verticalScrollBar();
-	if (verticalBar != nullptr) {
-		verticalBar->setMinimumWidth(4);
-	}
+	// 垂直 / 水平滚动条统一走 CarbonUIQScrollBar：2px 细条，悬停加厚到 4px
+	CarbonUIQScrollBar::applyStyle(area->verticalScrollBar());
+	CarbonUIQScrollBar::applyStyle(area->horizontalScrollBar());
 }

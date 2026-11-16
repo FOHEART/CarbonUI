@@ -16,7 +16,9 @@
  * 与 CarbonUIDialog 同一实现范式：控件自己负责外观，构造函数内完成全部 QSS
  * 与滚动条设置，调用方只需 new 后 setWidget()/加入布局。
  *
- * 外观契约：无边框、内容底色 \#3b3b3b，纵向滚动条收窄到 4px（\#cdcdcd 滑块）。
+ * 外观契约：无边框、内容底色 \#3b3b3b；垂直与水平滚动条的外观统一委托给
+ * CarbonUIQScrollBar（8px 命中范围、常态绘制 4px、悬停 8px、\#999999 滑块），
+ * 细节见 `CarbonUIQScrollBar.h`。
  *
  * 需要给"外部已有的 QScrollArea"刷同样外观的调用方，可改用静态接口
  * CarbonUIQScrollArea::applyStyle()（构造函数内部即调用它）。

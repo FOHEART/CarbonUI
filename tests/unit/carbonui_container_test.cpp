@@ -50,9 +50,16 @@ TEST(ScrollAreaStyle, SlimScrollBarAndBorderlessFrame)
     CarbonUIQScrollArea::applyStyle(&area);
 
     EXPECT_QSS_CONTAINS(area.styleSheet(), "QScrollArea { border: none; }");
-    EXPECT_QSS_CONTAINS(area.styleSheet(), "QScrollBar:vertical");
     ASSERT_NE(area.verticalScrollBar(), nullptr);
-    EXPECT_EQ(area.verticalScrollBar()->minimumWidth(), 4);
+    ASSERT_NE(area.horizontalScrollBar(), nullptr);
+    // 滚动条外观统一委托给 CarbonUIQScrollBar：样式表写在滚动条对象自身，
+    // 优先级高于 QScrollArea 的 "QScrollArea QWidget" 通配规则
+    EXPECT_QSS_CONTAINS(area.verticalScrollBar()->styleSheet(),
+                        "QScrollBar:vertical { background: #2e2e2e; width: 8px;");
+    EXPECT_QSS_CONTAINS(area.horizontalScrollBar()->styleSheet(),
+                        "QScrollBar:horizontal { background: #2e2e2e; height: 8px;");
+    EXPECT_EQ(area.verticalScrollBar()->minimumWidth(), 0)
+        << "thickness must come from QSS so :hover can grow it, not from setMinimumWidth";
 }
 
 TEST(MenuBarStyle, NullWidgetIsIgnored)

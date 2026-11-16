@@ -87,6 +87,7 @@ add_executable(carbonui_tests
     unit/carbonui_checkbox_test.cpp
     unit/carbonui_button_test.cpp
     unit/carbonui_container_test.cpp
+    unit/carbonui_scrollbar_test.cpp
     unit/carbonui_tree_test.cpp
     unit/carbonui_radio_test.cpp
     unit/carbonui_dialog_test.cpp
