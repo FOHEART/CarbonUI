@@ -23,9 +23,8 @@
  * 最小化 / 最大化 / 关闭按钮），调用方只需构造 + 追加行 + show()/exec()。
  *
  * 标题条右侧固定按"最小化 → 最大化 → 关闭"排列三个窗口按钮。最小化与最大化
- * 按钮默认隐藏（保持只有关闭按钮的经典外观），用
- * @ref setMinimizeButtonVisible / @ref setMaximizeButtonVisible 分别控制是否
- * 显示，互不影响。
+ * 按钮默认隐藏（保持只有关闭按钮的经典外观），用 `setMinimizeButtonVisible()`
+ * / `setMaximizeButtonVisible()` 分别控制是否显示，互不影响。
  *
  * 用法示例：
  * @code
