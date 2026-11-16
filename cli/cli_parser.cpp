@@ -12,6 +12,9 @@
  * @ingroup carbonui_cli
  */
 
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
+
 #include "cli_parser.h"
 
 #include <QJsonDocument>
@@ -153,55 +156,55 @@ QStringList widgetTypes()
         << QStringLiteral("groupbox");
 }
 
-bool parseButtonShape(const QString& text, CarbonUIClass::ButtonShape* shape)
+bool parseButtonShape(const QString& text, CarbonUIQPushButton::ButtonShape* shape)
 {
     if (!shape)
         return false;
     if (text.isEmpty() || text == QLatin1String("round"))
     {
-        *shape = CarbonUIClass::Shape_RoundAll;
+        *shape = CarbonUIQPushButton::Shape_RoundAll;
         return true;
     }
     if (text == QLatin1String("left"))
     {
-        *shape = CarbonUIClass::Shape_LeftRound;
+        *shape = CarbonUIQPushButton::Shape_LeftRound;
         return true;
     }
     if (text == QLatin1String("right"))
     {
-        *shape = CarbonUIClass::Shape_RightRound;
+        *shape = CarbonUIQPushButton::Shape_RightRound;
         return true;
     }
     if (text == QLatin1String("rect"))
     {
-        *shape = CarbonUIClass::Shape_Rectangle;
+        *shape = CarbonUIQPushButton::Shape_Rectangle;
         return true;
     }
     return false;
 }
 
-bool parseRadioShape(const QString& text, CarbonUIClass::RadioShape* shape)
+bool parseRadioShape(const QString& text, CarbonUIQRadioButton::RadioShape* shape)
 {
     if (!shape)
         return false;
     if (text.isEmpty() || text == QLatin1String("round"))
     {
-        *shape = CarbonUIClass::Radio_FourRound;
+        *shape = CarbonUIQRadioButton::Radio_FourRound;
         return true;
     }
     if (text == QLatin1String("left"))
     {
-        *shape = CarbonUIClass::Radio_LeftRound;
+        *shape = CarbonUIQRadioButton::Radio_LeftRound;
         return true;
     }
     if (text == QLatin1String("right"))
     {
-        *shape = CarbonUIClass::Radio_RightRound;
+        *shape = CarbonUIQRadioButton::Radio_RightRound;
         return true;
     }
     if (text == QLatin1String("rect"))
     {
-        *shape = CarbonUIClass::Radio_Rectangle;
+        *shape = CarbonUIQRadioButton::Radio_Rectangle;
         return true;
     }
     return false;

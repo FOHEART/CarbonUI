@@ -1,6 +1,6 @@
 /**
  * @file  carbonui_lineedit_test.cpp
- * @brief `CarbonUIClass::applyLineEditStyle_numberInput()` 的行为用例。
+ * @brief `CarbonUIQLineEdit::applyStyle()` 的行为用例。
  * @author CarbonUI
  * @date  2026-10-30
  * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
@@ -20,18 +20,18 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQLineEdit.h"
 #include "qt_test_support.h"
 
 TEST(LineEditStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyLineEditStyle_numberInput(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQLineEdit::applyStyle(nullptr));
 }
 
 TEST(LineEditStyle, AppliesNumberInputStyleSheet)
 {
     QLineEdit edit;                                          // Arrange
-    CarbonUIClass::applyLineEditStyle_numberInput(&edit);     // Act
+    CarbonUIQLineEdit::applyStyle(&edit);     // Act
 
     EXPECT_QSS_CONTAINS(edit.styleSheet(), "QLineEdit");                    // Assert
     EXPECT_QSS_CONTAINS(edit.styleSheet(), "background-color: #2f2f2f");
@@ -43,7 +43,7 @@ TEST(LineEditStyle, CentersTextAndShowsBeamCursor)
     QLineEdit edit;
     edit.setAlignment(Qt::AlignRight);
 
-    CarbonUIClass::applyLineEditStyle_numberInput(&edit);
+    CarbonUIQLineEdit::applyStyle(&edit);
 
     EXPECT_EQ(edit.alignment(), Qt::AlignCenter);
     EXPECT_EQ(edit.contentsMargins(), QMargins(0, 0, 0, 0));
@@ -55,8 +55,8 @@ TEST(LineEditStyle, AppliesFixedWidthOnlyForPositiveWidth)
     QLineEdit fixedEdit;
     QLineEdit autoEdit;
 
-    CarbonUIClass::applyLineEditStyle_numberInput(&fixedEdit, 160);
-    CarbonUIClass::applyLineEditStyle_numberInput(&autoEdit, 0);
+    CarbonUIQLineEdit::applyStyle(&fixedEdit, 160);
+    CarbonUIQLineEdit::applyStyle(&autoEdit, 0);
 
     EXPECT_EQ(fixedEdit.minimumWidth(), 160);
     EXPECT_EQ(fixedEdit.maximumWidth(), 160);
@@ -68,7 +68,7 @@ TEST(LineEditStyle, InstallsCLocaleStandardNotationValidator)
 {
     QLineEdit edit;
 
-    CarbonUIClass::applyLineEditStyle_numberInput(&edit);
+    CarbonUIQLineEdit::applyStyle(&edit);
 
     const auto* validator = dynamic_cast<const QDoubleValidator*>(edit.validator());
     ASSERT_NE(validator, nullptr) << "a QDoubleValidator must be installed";
@@ -80,7 +80,7 @@ TEST(LineEditStyle, InstallsCLocaleStandardNotationValidator)
 TEST(LineEditStyle, ValidatorAcceptsDecimalsAndRejectsGarbage)
 {
     QLineEdit edit;
-    CarbonUIClass::applyLineEditStyle_numberInput(&edit);
+    CarbonUIQLineEdit::applyStyle(&edit);
     const QValidator* validator = edit.validator();
     ASSERT_NE(validator, nullptr);
 
@@ -108,7 +108,7 @@ TEST(LineEditStyle, ReturnPressedReleasesKeyboardFocus)
     auto* layout = new QVBoxLayout(&window);
     auto* edit = new QLineEdit(&window);
     layout->addWidget(edit);
-    CarbonUIClass::applyLineEditStyle_numberInput(edit);
+    CarbonUIQLineEdit::applyStyle(edit);
 
     carbonui_test::showAndSettle(&window);
     QApplication::setActiveWindow(&window);

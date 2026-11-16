@@ -27,6 +27,11 @@
 #include <QtWidgets/QVBoxLayout>
 
 #include "CarbonUIClass.h"
+#include "CarbonUIQCheckBox.h"
+#include "CarbonUIQComboBox.h"
+#include "CarbonUIQLineEdit.h"
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
 
 namespace carbonui {
 namespace cli {
@@ -156,11 +161,11 @@ Envelope runGallery(const QStringList& args)
 
     auto* button = new QPushButton(QStringLiteral("Confirm"), host);
     button->setGeometry(16, 40, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
 
     auto* checkbox = new QCheckBox(host);
     checkbox->setGeometry(16, 84, 16, 16);
-    CarbonUIClass::applyCheckStyle(checkbox);
+    CarbonUIQCheckBox::applyStyle(checkbox);
     checkbox->setChecked(true);
 
     auto* checkboxLabel = new QLabel(QStringLiteral("Remember me"), host);
@@ -168,18 +173,18 @@ Envelope runGallery(const QStringList& args)
 
     auto* radio = new QRadioButton(QStringLiteral("Mode A"), host);
     radio->setGeometry(16, 116, 120, 28);
-    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 120);
+    CarbonUIQRadioButton::applyStyle(radio, CarbonUIQRadioButton::Radio_FourRound, 120);
     radio->setChecked(true);
 
     auto* lineEdit = new QLineEdit(QStringLiteral("42.5"), host);
     lineEdit->setGeometry(16, 152, 180, 28);
-    CarbonUIClass::applyLineEditStyle_numberInput(lineEdit);
+    CarbonUIQLineEdit::applyStyle(lineEdit);
 
     auto* combo = new QComboBox(host);
     combo->setGeometry(16, 188, 180, 28);
     combo->addItem(QStringLiteral("Item one"));
     combo->addItem(QStringLiteral("Item two"));
-    CarbonUIClass::setupComboBoxStyle(combo);
+    CarbonUIQComboBox::applyStyle(combo);
 
     // 标签样式统一最后刷：该函数只处理"当时已存在"的子控件。
     CarbonUIClass::setWidgetLabelsStyleRecursively(host);

@@ -1,6 +1,6 @@
 /**
  * @file  carbonui_button_test.cpp
- * @brief `CarbonUIClass::applyButtonStyle()` 的圆角形状用例。
+ * @brief `CarbonUIQPushButton::applyStyle()` 的圆角形状用例。
  * @author CarbonUI
  * @date  2026-10-30
  * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
@@ -16,7 +16,7 @@
 
 #include <QtWidgets/QPushButton>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQPushButton.h"
 #include "qt_test_support.h"
 
 namespace
@@ -34,14 +34,14 @@ namespace
 
 TEST(ButtonStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyButtonStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQPushButton::applyStyle(nullptr));
 }
 
 TEST(ButtonStyle, DefaultShapeRoundsAllCorners)
 {
     QPushButton button;
 
-    CarbonUIClass::applyButtonStyle(&button);
+    CarbonUIQPushButton::applyStyle(&button);
 
     EXPECT_TRUE(cornersMatch(button, 10, 10, 10, 10));
 }
@@ -50,7 +50,7 @@ TEST(ButtonStyle, LeftRoundShapeRoundsLeftEdgeOnly)
 {
     QPushButton button;
 
-    CarbonUIClass::applyButtonStyle(&button, CarbonUIClass::Shape_LeftRound);
+    CarbonUIQPushButton::applyStyle(&button, CarbonUIQPushButton::Shape_LeftRound);
 
     EXPECT_TRUE(cornersMatch(button, 10, 10, 0, 0));
 }
@@ -59,7 +59,7 @@ TEST(ButtonStyle, RightRoundShapeRoundsRightEdgeOnly)
 {
     QPushButton button;
 
-    CarbonUIClass::applyButtonStyle(&button, CarbonUIClass::Shape_RightRound);
+    CarbonUIQPushButton::applyStyle(&button, CarbonUIQPushButton::Shape_RightRound);
 
     EXPECT_TRUE(cornersMatch(button, 0, 0, 10, 10));
 }
@@ -68,7 +68,7 @@ TEST(ButtonStyle, RectangleShapeRoundsNothing)
 {
     QPushButton button;
 
-    CarbonUIClass::applyButtonStyle(&button, CarbonUIClass::Shape_Rectangle);
+    CarbonUIQPushButton::applyStyle(&button, CarbonUIQPushButton::Shape_Rectangle);
 
     EXPECT_TRUE(cornersMatch(button, 0, 0, 0, 0));
 }
@@ -77,7 +77,7 @@ TEST(ButtonStyle, AppliesAccentPaletteAndPointerCursor)
 {
     QPushButton button;
 
-    CarbonUIClass::applyButtonStyle(&button);
+    CarbonUIQPushButton::applyStyle(&button);
 
     EXPECT_EQ(button.cursor().shape(), Qt::PointingHandCursor);
     EXPECT_QSS_CONTAINS(button.styleSheet(), "background-color: #009ee8");
@@ -92,8 +92,8 @@ TEST(ButtonStyle, DisabledRuleSurvivesShapeVariants)
     // 否则按钮在 setEnabled(false) 后仍渲染成可用态（截图基线曾抓到过）。
     QPushButton round;
     QPushButton rectangle;
-    CarbonUIClass::applyButtonStyle(&round, CarbonUIClass::Shape_RoundAll);
-    CarbonUIClass::applyButtonStyle(&rectangle, CarbonUIClass::Shape_Rectangle);
+    CarbonUIQPushButton::applyStyle(&round, CarbonUIQPushButton::Shape_RoundAll);
+    CarbonUIQPushButton::applyStyle(&rectangle, CarbonUIQPushButton::Shape_Rectangle);
 
     EXPECT_QSS_CONTAINS(round.styleSheet(), "QPushButton:disabled");
     EXPECT_QSS_CONTAINS(rectangle.styleSheet(), "QPushButton:disabled");

@@ -1,6 +1,6 @@
 /**
  * @file  carbonui_checkbox_test.cpp
- * @brief `CarbonUIClass::applyCheckStyle()` 的行为用例。
+ * @brief `CarbonUIQCheckBox::applyStyle()` 的行为用例。
  * @author CarbonUI
  * @date  2026-10-30
  * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
@@ -9,7 +9,7 @@
  * @details
  * 覆盖点：空指针安全、文本转移到子控件、固定几何、指示器颜色随勾选状态变化、
  * 悬停状态切换，以及本地事件过滤器对左键释放的拦截（含非左键不得误触）。
- * 另覆盖指示灯居右形态（::CarbonUIClass::Check_IndicatorRight）：文字容器、
+ * 另覆盖指示灯居右形态（::CarbonUIQCheckBox::Check_IndicatorRight）：文字容器、
  * 圆环/圆点子控件、可变几何、圆点配色、悬停高亮与改文案同步。
  */
 
@@ -22,7 +22,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQCheckBox.h"
 #include "qt_test_support.h"
 
 namespace
@@ -35,7 +35,7 @@ QWidget* findIndicator(QCheckBox* checkBox)
 
 TEST(CheckStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyCheckStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQCheckBox::applyStyle(nullptr));
 }
 
 TEST(CheckStyle, MovesTextIntoIndicatorChildWidget)
@@ -44,7 +44,7 @@ TEST(CheckStyle, MovesTextIntoIndicatorChildWidget)
     checkBox.setObjectName(QStringLiteral("chk"));
     checkBox.setText(QStringLiteral("Enable"));
 
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
 
     EXPECT_TRUE(checkBox.text().isEmpty()) << "the caption must move to the indicator subtree";
     ASSERT_NE(findIndicator(&checkBox), nullptr) << "indicator child 'chk_indicator' is missing";
@@ -58,7 +58,7 @@ TEST(CheckStyle, MovesTextIntoIndicatorChildWidget)
 TEST(CheckStyle, FixesWidgetGeometryAndCursor)
 {
     QCheckBox checkBox;
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
 
     EXPECT_EQ(checkBox.size(), QSize(16, 16));
     EXPECT_EQ(checkBox.width(), 16);
@@ -71,7 +71,7 @@ TEST(CheckStyle, IndicatorColourFollowsCheckedState)
 {
     QCheckBox checkBox;
     checkBox.setObjectName(QStringLiteral("chk"));
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
     QWidget* indicator = findIndicator(&checkBox);
     ASSERT_NE(indicator, nullptr);
 
@@ -89,7 +89,7 @@ TEST(CheckStyle, IndicatorColourFollowsCheckedState)
 TEST(CheckStyle, HoverHighlightsBorderAndRestoresItOnLeave)
 {
     QCheckBox checkBox;
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
 
     QEvent enter(QEvent::Enter);
     QApplication::sendEvent(&checkBox, &enter);
@@ -103,7 +103,7 @@ TEST(CheckStyle, HoverHighlightsBorderAndRestoresItOnLeave)
 TEST(CheckStyle, LeftButtonReleaseTogglesCheckedState)
 {
     QCheckBox checkBox;
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
     ASSERT_FALSE(checkBox.isChecked());
 
     QMouseEvent press(QEvent::MouseButtonPress, QPointF(8, 8), Qt::LeftButton,
@@ -120,7 +120,7 @@ TEST(CheckStyle, LeftButtonReleaseTogglesCheckedState)
 TEST(CheckStyle, NonLeftButtonReleaseDoesNotToggle)
 {
     QCheckBox checkBox;
-    CarbonUIClass::applyCheckStyle(&checkBox);
+    CarbonUIQCheckBox::applyStyle(&checkBox);
 
     QMouseEvent release(QEvent::MouseButtonRelease, QPointF(8, 8), Qt::RightButton,
                         Qt::RightButton, Qt::NoModifier);
@@ -135,7 +135,7 @@ TEST(CheckStyle, RightIndicatorMovesTextIntoChildLabel)
     checkBox.setObjectName(QStringLiteral("chkR"));
     checkBox.setText(QStringLiteral("Enable"));
 
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
 
     QLabel* label = checkBox.findChild<QLabel*>(QStringLiteral("chkR_label"),
                                                 Qt::FindDirectChildrenOnly);
@@ -148,7 +148,7 @@ TEST(CheckStyle, RightIndicatorCreatesRingWithInnerDot)
 {
     QCheckBox checkBox;
     checkBox.setObjectName(QStringLiteral("chkR"));
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
 
     QWidget* ring = findIndicator(&checkBox);
     ASSERT_NE(ring, nullptr) << "ring child 'chkR_indicator' is missing";
@@ -164,7 +164,7 @@ TEST(CheckStyle, RightIndicatorCreatesRingWithInnerDot)
 TEST(CheckStyle, RightIndicatorKeepsGeometryResizable)
 {
     QCheckBox checkBox;
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
 
     EXPECT_NE(checkBox.maximumSize(), QSize(16, 16))
         << "right-indicator mode must not fix the widget to 16x16";
@@ -176,7 +176,7 @@ TEST(CheckStyle, RightIndicatorDotColourFollowsCheckedState)
 {
     QCheckBox checkBox;
     checkBox.setObjectName(QStringLiteral("chkR"));
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
     QWidget* dot = checkBox.findChild<QWidget*>(QStringLiteral("chkR_dot"));
     ASSERT_NE(dot, nullptr);
 
@@ -195,7 +195,7 @@ TEST(CheckStyle, RightIndicatorHoverHighlightsRingAndRestoresItOnLeave)
 {
     QCheckBox checkBox;
     checkBox.setObjectName(QStringLiteral("chkR"));
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
     QWidget* ring = findIndicator(&checkBox);
     ASSERT_NE(ring, nullptr);
 
@@ -217,7 +217,7 @@ TEST(CheckStyle, RightIndicatorCaptionChangeIsSyncedOnShowEvent)
     QCheckBox checkBox;
     checkBox.setObjectName(QStringLiteral("chkR"));
     checkBox.setText(QStringLiteral("Old"));
-    CarbonUIClass::applyCheckStyle(&checkBox, CarbonUIClass::Check_IndicatorRight);
+    CarbonUIQCheckBox::applyStyle(&checkBox, CarbonUIQCheckBox::Check_IndicatorRight);
     QLabel* label = checkBox.findChild<QLabel*>(QStringLiteral("chkR_label"),
                                                 Qt::FindDirectChildrenOnly);
     ASSERT_NE(label, nullptr);

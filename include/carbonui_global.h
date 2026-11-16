@@ -29,11 +29,13 @@
  * @brief Qt 5 Widgets 的暗色样式助手与可折叠分组框。
  *
  * @details
- * 库内含两个彼此独立的组件：
- * - ::CarbonUIClass —— 全静态样式门面，按控件逐个应用 QSS；
+ * 库内含三类彼此独立的组件：
+ * - ::CarbonUIClass —— 全局样式助手（QToolTip 配色、递归标签配色）；
+ * - ::CarbonUIQPushButton 等自带外观控件类（按 CarbonUIDialog 范式实现，
+ *   样式逻辑的唯一实现处）；
  * - ::QGroupBoxCollapser —— 把已有的 QGroupBox 改造成可折叠面板的控制器对象。
  *
- * 两者不共享状态，也不强制配色主题；调用方按需选用。
+ * 三类组件不共享状态，也不强制配色主题；调用方按需选用。
  */
 
 #pragma once

@@ -31,7 +31,8 @@
 #include <QStringList>
 #include <QJsonObject>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
 
 namespace carbonui {
 namespace cli {
@@ -130,7 +131,7 @@ QStringList widgetTypes();
  * @param[out] shape 映射结果；非法取值时不写。
  * @return 合法返回 true，否则 false。
  */
-bool parseButtonShape(const QString& text, CarbonUIClass::ButtonShape* shape);
+bool parseButtonShape(const QString& text, CarbonUIQPushButton::ButtonShape* shape);
 
 /**
  * @brief 把 `round|left|right|rect` 映射为单选按钮外形。
@@ -139,7 +140,7 @@ bool parseButtonShape(const QString& text, CarbonUIClass::ButtonShape* shape);
  * @param[out] shape 映射结果；非法取值时不写。
  * @return 合法返回 true，否则 false。
  */
-bool parseRadioShape(const QString& text, CarbonUIClass::RadioShape* shape);
+bool parseRadioShape(const QString& text, CarbonUIQRadioButton::RadioShape* shape);
 
 } // namespace cli
 } // namespace carbonui

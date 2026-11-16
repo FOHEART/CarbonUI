@@ -1,6 +1,6 @@
 /**
  * @file  carbonui_radio_test.cpp
- * @brief `CarbonUIClass::applyRadioStyle()` 的行为用例。
+ * @brief `CarbonUIQRadioButton::applyStyle()` 的行为用例。
  * @author CarbonUI
  * @date  2026-10-30
  * @version 见 include/CarbonUIVersion.h（工程版本唯一来源）
@@ -21,7 +21,7 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QRadioButton>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQRadioButton.h"
 #include "qt_test_support.h"
 
 namespace
@@ -35,7 +35,7 @@ QLabel* centreLabel(QRadioButton* button)
 
 TEST(RadioStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyRadioStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQRadioButton::applyStyle(nullptr));
 }
 
 TEST(RadioStyle, MovesCaptionIntoCentreLabel)
@@ -44,7 +44,7 @@ TEST(RadioStyle, MovesCaptionIntoCentreLabel)
     radio.setObjectName(QStringLiteral("rb"));
     radio.setText(QStringLiteral("Mode A"));
 
-    CarbonUIClass::applyRadioStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio);
 
     EXPECT_TRUE(radio.text().isEmpty()) << "caption must be moved out of the button";
     QLabel* label = centreLabel(&radio);
@@ -58,7 +58,7 @@ TEST(RadioStyle, AppliesDefaultMinimumWidthAndButtonMetrics)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio);
 
     EXPECT_QSS_CONTAINS(radio.styleSheet(), "min-width: 28px; min-height: 24px;");
     EXPECT_QSS_CONTAINS(radio.styleSheet(), "QRadioButton::indicator { width: 0px; height: 0px;");
@@ -71,7 +71,7 @@ TEST(RadioStyle, HonoursCustomMinimumWidth)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_FourRound, 72);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_FourRound, 72);
 
     EXPECT_QSS_CONTAINS(radio.styleSheet(), "min-width: 72px;");
 }
@@ -80,7 +80,7 @@ TEST(RadioStyle, FourRoundShapeKeepsUniformRadius)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_FourRound);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_FourRound);
 
     EXPECT_QSS_CONTAINS(radio.styleSheet(), "border-radius: 12px");
     EXPECT_QSS_NOT_CONTAINS(radio.styleSheet(), "border-top-left-radius");
@@ -90,7 +90,7 @@ TEST(RadioStyle, RectangleShapeZeroesAllCorners)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_Rectangle);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_Rectangle);
 
     EXPECT_QSS_NOT_CONTAINS(radio.styleSheet(), "border-radius: 12px");
     EXPECT_QSS_CONTAINS(radio.styleSheet(), "border-top-left-radius: 0px;");
@@ -101,7 +101,7 @@ TEST(RadioStyle, LeftRoundShapeRoundsLeftEdgeOnly)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_LeftRound);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_LeftRound);
 
     EXPECT_QSS_CONTAINS(radio.styleSheet(),
                         "border-top-left-radius: 10px; border-bottom-left-radius: 10px;");
@@ -112,7 +112,7 @@ TEST(RadioStyle, RightRoundShapeRoundsRightEdgeOnly)
 {
     QRadioButton radio;
 
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_RightRound);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_RightRound);
 
     EXPECT_QSS_CONTAINS(radio.styleSheet(),
                         "border-top-right-radius: 10px; border-bottom-right-radius: 10px;");
@@ -125,9 +125,9 @@ TEST(RadioStyle, IsIdempotentAcrossRepeatedCalls)
     radio.setObjectName(QStringLiteral("rb"));
     radio.setText(QStringLiteral("Once"));
 
-    CarbonUIClass::applyRadioStyle(&radio);
-    CarbonUIClass::applyRadioStyle(&radio);
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_Rectangle, 40);
+    CarbonUIQRadioButton::applyStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_Rectangle, 40);
 
     EXPECT_EQ(radio.findChildren<QLabel*>(QStringLiteral("rb_label")).size(), 1)
         << "styling twice must not spawn a second caption label";
@@ -139,7 +139,7 @@ TEST(RadioStyle, CheckedStateRecoloursCaption)
 {
     QRadioButton radio;
     radio.setObjectName(QStringLiteral("rb"));
-    CarbonUIClass::applyRadioStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio);
     QLabel* label = centreLabel(&radio);
     ASSERT_NE(label, nullptr);
 
@@ -155,7 +155,7 @@ TEST(RadioStyle, CaptionChangeIsSyncedOnShowEvent)
     QRadioButton radio;
     radio.setObjectName(QStringLiteral("rb"));
     radio.setText(QStringLiteral("Old"));
-    CarbonUIClass::applyRadioStyle(&radio);
+    CarbonUIQRadioButton::applyStyle(&radio);
     QLabel* label = centreLabel(&radio);
     ASSERT_NE(label, nullptr);
 
@@ -171,7 +171,7 @@ TEST(RadioStyle, LongCaptionStaysInsideButtonBounds)
 {
     QRadioButton radio;
     radio.setObjectName(QStringLiteral("rb"));
-    CarbonUIClass::applyRadioStyle(&radio, CarbonUIClass::Radio_FourRound, 120);
+    CarbonUIQRadioButton::applyStyle(&radio, CarbonUIQRadioButton::Radio_FourRound, 120);
     QLabel* label = centreLabel(&radio);
     ASSERT_NE(label, nullptr);
 
@@ -203,7 +203,7 @@ TEST(RadioStyle, LongCaptionDoesNotInflateButtonInLayout)
     radio->setObjectName(QStringLiteral("rb"));
     row->addWidget(radio);
     row->addSpacerItem(new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum));
-    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 120);
+    CarbonUIQRadioButton::applyStyle(radio, CarbonUIQRadioButton::Radio_FourRound, 120);
     QLabel* label = centreLabel(radio);
     ASSERT_NE(label, nullptr);
 

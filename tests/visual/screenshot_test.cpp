@@ -45,6 +45,13 @@
 #include <QtWidgets/QWidget>
 
 #include "CarbonUIClass.h"
+#include "CarbonUIQCheckBox.h"
+#include "CarbonUIQComboBox.h"
+#include "CarbonUIQLineEdit.h"
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
+#include "CarbonUIQTabWidget.h"
+#include "CarbonUIQTreeWidget.h"
 #include "CarbonUIDialog.h"
 #include "groupboxcollapser.h"
 #include "screenshot_support.h"
@@ -78,12 +85,12 @@ TEST(Screenshot, FormOverview)
 
     auto* button = new QPushButton(QStringLiteral("Confirm"), host);
     button->setGeometry(16, 40, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
 
     // applyCheckStyle 是"纯指示灯"式复选框（会清掉文字），所以旁边的说明文字用 QLabel。
     auto* checkbox = new QCheckBox(host);
     checkbox->setGeometry(16, 84, 16, 16);
-    CarbonUIClass::applyCheckStyle(checkbox);
+    CarbonUIQCheckBox::applyStyle(checkbox);
     checkbox->setChecked(true);
 
     auto* checkboxLabel = new QLabel(QStringLiteral("Remember me"), host);
@@ -91,18 +98,18 @@ TEST(Screenshot, FormOverview)
 
     auto* radio = new QRadioButton(QStringLiteral("Mode A"), host);
     radio->setGeometry(16, 116, 120, 28);
-    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 120);
+    CarbonUIQRadioButton::applyStyle(radio, CarbonUIQRadioButton::Radio_FourRound, 120);
     radio->setChecked(true);
 
     auto* edit = new QLineEdit(QStringLiteral("42.5"), host);
     edit->setGeometry(16, 152, 180, 28);
-    CarbonUIClass::applyLineEditStyle_numberInput(edit);
+    CarbonUIQLineEdit::applyStyle(edit);
 
     auto* combo = new QComboBox(host);
     combo->setGeometry(16, 188, 180, 28);
     combo->addItem(QStringLiteral("Item one"));
     combo->addItem(QStringLiteral("Item two"));
-    CarbonUIClass::setupComboBoxStyle(combo);
+    CarbonUIQComboBox::applyStyle(combo);
 
     // 标签样式放最后统一刷：该函数只处理"当时已存在"的子控件。
     CarbonUIClass::setWidgetLabelsStyleRecursively(host);
@@ -115,7 +122,7 @@ TEST(Screenshot, ButtonRoundMatchesBaseline)
     QWidget* host = makeHost(160, 72);
     auto* button = new QPushButton(QStringLiteral("OK"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
 
     CARBONUI_CHECK_SCREENSHOT(host, "button-round");
 }
@@ -125,7 +132,7 @@ TEST(Screenshot, ButtonRectangleMatchesBaseline)
     QWidget* host = makeHost(160, 72);
     auto* button = new QPushButton(QStringLiteral("OK"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button, CarbonUIClass::Shape_Rectangle);
+    CarbonUIQPushButton::applyStyle(button, CarbonUIQPushButton::Shape_Rectangle);
 
     CARBONUI_CHECK_SCREENSHOT(host, "button-rectangle");
 }
@@ -136,7 +143,7 @@ TEST(Screenshot, ButtonDisabledMatchesBaseline)
     QWidget* host = makeHost(160, 72);
     auto* button = new QPushButton(QStringLiteral("OK"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
     button->setEnabled(false);
 
     CARBONUI_CHECK_SCREENSHOT(host, "button-disabled");
@@ -148,9 +155,9 @@ TEST(Screenshot, RadioSegmentsMatchBaseline)
     auto* left = new QRadioButton(QStringLiteral("L"));
     auto* middle = new QRadioButton(QStringLiteral("M"));
     auto* right = new QRadioButton(QStringLiteral("R"));
-    CarbonUIClass::applyRadioStyle(left, CarbonUIClass::Radio_LeftRound, 60);
-    CarbonUIClass::applyRadioStyle(middle, CarbonUIClass::Radio_Rectangle, 60);
-    CarbonUIClass::applyRadioStyle(right, CarbonUIClass::Radio_RightRound, 60);
+    CarbonUIQRadioButton::applyStyle(left, CarbonUIQRadioButton::Radio_LeftRound, 60);
+    CarbonUIQRadioButton::applyStyle(middle, CarbonUIQRadioButton::Radio_Rectangle, 60);
+    CarbonUIQRadioButton::applyStyle(right, CarbonUIQRadioButton::Radio_RightRound, 60);
     left->setAutoExclusive(false);
     middle->setAutoExclusive(false);
     right->setAutoExclusive(false);
@@ -183,11 +190,11 @@ TEST(Screenshot, CheckboxStatesMatchBaseline)
 
     auto* plain = new QCheckBox(host);
     plain->setGeometry(16, 16, 16, 16);
-    CarbonUIClass::applyCheckStyle(plain);
+    CarbonUIQCheckBox::applyStyle(plain);
 
     auto* checked = new QCheckBox(host);
     checked->setGeometry(56, 16, 16, 16);
-    CarbonUIClass::applyCheckStyle(checked);
+    CarbonUIQCheckBox::applyStyle(checked);
     checked->setChecked(true);
 
     CARBONUI_CHECK_SCREENSHOT(host, "checkbox-states");
@@ -198,7 +205,7 @@ TEST(Screenshot, LineEditNumberMatchesBaseline)
     QWidget* host = makeHost(220, 60);
     auto* edit = new QLineEdit(QStringLiteral("42.5"), host);
     edit->setGeometry(20, 16, 180, 28);
-    CarbonUIClass::applyLineEditStyle_numberInput(edit);
+    CarbonUIQLineEdit::applyStyle(edit);
 
     CARBONUI_CHECK_SCREENSHOT(host, "line-edit-number");
 }
@@ -210,7 +217,7 @@ TEST(Screenshot, TabWidgetMatchesBaseline)
     tabs->setGeometry(10, 10, 240, 120);
     tabs->addTab(new QLabel(QStringLiteral("page one")), QStringLiteral("One"));
     tabs->addTab(new QLabel(QStringLiteral("page two")), QStringLiteral("Two"));
-    CarbonUIClass::setupTabWidgetStyle(tabs);
+    CarbonUIQTabWidget::applyStyle(tabs);
 
     CARBONUI_CHECK_SCREENSHOT(host, "tab-widget");
 }
@@ -228,7 +235,7 @@ TEST(Screenshot, TreeWidgetMatchesBaseline)
         item->setText(0, QStringLiteral("row %1").arg(i));
         item->setText(1, QStringLiteral("v%1").arg(i));
     }
-    CarbonUIClass::applyTreeWidgetStyle(tree);
+    CarbonUIQTreeWidget::applyStyle(tree);
     tree->setCurrentItem(tree->topLevelItem(1));
 
     CARBONUI_CHECK_SCREENSHOT(host, "tree-widget");
@@ -241,7 +248,7 @@ TEST(Screenshot, GroupBoxExpandedMatchesBaseline)
     auto* layout = new QVBoxLayout(box);
     layout->addWidget(new QLabel(QStringLiteral("body text")));
     auto* action = new QPushButton(QStringLiteral("Action"));
-    CarbonUIClass::applyButtonStyle(action);
+    CarbonUIQPushButton::applyStyle(action);
     layout->addWidget(action);
     QGroupBoxCollapser::installIntoGroupBox(box, nullptr, true);
     box->setGeometry(10, 10, 240, box->sizeHint().height());
@@ -256,7 +263,7 @@ TEST(Screenshot, GroupBoxCollapsedMatchesBaseline)
     auto* layout = new QVBoxLayout(box);
     layout->addWidget(new QLabel(QStringLiteral("body text")));
     auto* action = new QPushButton(QStringLiteral("Action"));
-    CarbonUIClass::applyButtonStyle(action);
+    CarbonUIQPushButton::applyStyle(action);
     layout->addWidget(action);
     QGroupBoxCollapser::installIntoGroupBox(box, nullptr, false);
     box->setGeometry(10, 10, 240, box->sizeHint().height());

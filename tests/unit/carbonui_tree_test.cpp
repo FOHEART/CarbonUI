@@ -18,19 +18,20 @@
 #include <QtWidgets/QTreeView>
 #include <QtWidgets/QTreeWidget>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQTreeView.h"
+#include "CarbonUIQTreeWidget.h"
 #include "qt_test_support.h"
 
 TEST(TreeWidgetStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyTreeWidgetStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQTreeWidget::applyStyle(nullptr));
 }
 
 TEST(TreeWidgetStyle, FlattensIndentationAndStylesHeader)
 {
     QTreeWidget tree;
 
-    CarbonUIClass::applyTreeWidgetStyle(&tree);
+    CarbonUIQTreeWidget::applyStyle(&tree);
 
     EXPECT_EQ(tree.indentation(), 0);
     EXPECT_FALSE(tree.rootIsDecorated());
@@ -48,7 +49,7 @@ TEST(TreeWidgetStyle, FlattensIndentationAndStylesHeader)
 
 TEST(TreeViewStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyTreeViewStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQTreeView::applyStyle(nullptr));
 }
 
 TEST(TreeViewStyle, KeepsHierarchyAndDisablesEditing)
@@ -57,7 +58,7 @@ TEST(TreeViewStyle, KeepsHierarchyAndDisablesEditing)
     view.setRootIsDecorated(false);
     view.setIndentation(0);
 
-    CarbonUIClass::applyTreeViewStyle(&view);
+    CarbonUIQTreeView::applyStyle(&view);
 
     EXPECT_EQ(view.indentation(), 14);
     EXPECT_TRUE(view.rootIsDecorated());
@@ -72,7 +73,7 @@ TEST(TreeViewStyle, AcceptsTreeWidgetThroughBasePointer)
 {
     QTreeWidget tree; // QTreeWidget derives from QTreeView
 
-    CarbonUIClass::applyTreeViewStyle(&tree);
+    CarbonUIQTreeView::applyStyle(&tree);
 
     EXPECT_EQ(tree.indentation(), 14);
     EXPECT_TRUE(tree.rootIsDecorated());

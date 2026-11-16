@@ -30,18 +30,24 @@
 #include <QtWidgets/QWidget>
 
 #include "CarbonUIClass.h"
+#include "CarbonUIQComboBox.h"
+#include "CarbonUIQMenuBar.h"
+#include "CarbonUIQScrollArea.h"
+#include "CarbonUIQStatusBar.h"
+#include "CarbonUIQTabWidget.h"
+#include "CarbonUIQToolBar.h"
 #include "qt_test_support.h"
 
 TEST(ScrollAreaStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::applyScrollAreaStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQScrollArea::applyStyle(nullptr));
 }
 
 TEST(ScrollAreaStyle, SlimScrollBarAndBorderlessFrame)
 {
     QScrollArea area;
 
-    CarbonUIClass::applyScrollAreaStyle(&area);
+    CarbonUIQScrollArea::applyStyle(&area);
 
     EXPECT_QSS_CONTAINS(area.styleSheet(), "QScrollArea { border: none; }");
     EXPECT_QSS_CONTAINS(area.styleSheet(), "QScrollBar:vertical");
@@ -51,14 +57,14 @@ TEST(ScrollAreaStyle, SlimScrollBarAndBorderlessFrame)
 
 TEST(MenuBarStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::setupMenuBarStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQMenuBar::applyStyle(nullptr));
 }
 
 TEST(MenuBarStyle, UsesInWindowBarWithBoldTenPointFont)
 {
     QMenuBar bar;
 
-    CarbonUIClass::setupMenuBarStyle(&bar);
+    CarbonUIQMenuBar::applyStyle(&bar);
 
     EXPECT_FALSE(bar.isNativeMenuBar());
     EXPECT_EQ(bar.minimumHeight(), 26);
@@ -71,14 +77,14 @@ TEST(MenuBarStyle, UsesInWindowBarWithBoldTenPointFont)
 
 TEST(ToolBarStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::setupToolBarStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQToolBar::applyStyle(nullptr));
 }
 
 TEST(ToolBarStyle, LocksToolBarAndAppliesIconMetrics)
 {
     QToolBar toolBar;
 
-    CarbonUIClass::setupToolBarStyle(&toolBar);
+    CarbonUIQToolBar::applyStyle(&toolBar);
 
     EXPECT_FALSE(toolBar.isMovable());
     EXPECT_FALSE(toolBar.isFloatable());
@@ -94,14 +100,14 @@ TEST(ToolBarStyle, LocksToolBarAndAppliesIconMetrics)
 
 TEST(TabWidgetStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::setupTabWidgetStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQTabWidget::applyStyle(nullptr));
 }
 
 TEST(TabWidgetStyle, StylesPaneAndTabBar)
 {
     QTabWidget tabs;
 
-    CarbonUIClass::setupTabWidgetStyle(&tabs);
+    CarbonUIQTabWidget::applyStyle(&tabs);
 
     EXPECT_QSS_CONTAINS(tabs.styleSheet(), "QTabWidget::pane");
     EXPECT_QSS_CONTAINS(tabs.styleSheet(), "QTabBar::tab:selected");
@@ -110,14 +116,14 @@ TEST(TabWidgetStyle, StylesPaneAndTabBar)
 
 TEST(ComboBoxStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::setupComboBoxStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQComboBox::applyStyle(nullptr));
 }
 
 TEST(ComboBoxStyle, UsesRoundedFieldAndResourceArrow)
 {
     QComboBox combo;
 
-    CarbonUIClass::setupComboBoxStyle(&combo);
+    CarbonUIQComboBox::applyStyle(&combo);
 
     EXPECT_QSS_CONTAINS(combo.styleSheet(), "border-radius: 12px");
     EXPECT_QSS_CONTAINS(combo.styleSheet(), "QComboBox::drop-down");
@@ -127,14 +133,14 @@ TEST(ComboBoxStyle, UsesRoundedFieldAndResourceArrow)
 
 TEST(StatusBarStyle, NullWidgetIsIgnored)
 {
-    EXPECT_NO_FATAL_FAILURE(CarbonUIClass::setupQStatusBarStyle(nullptr));
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQStatusBar::applyStyle(nullptr));
 }
 
 TEST(StatusBarStyle, UsesMutedSurfaceColours)
 {
     QStatusBar bar;
 
-    CarbonUIClass::setupQStatusBarStyle(&bar);
+    CarbonUIQStatusBar::applyStyle(&bar);
 
     EXPECT_QSS_CONTAINS(bar.styleSheet(), "background-color: #2e2e2e");
     EXPECT_QSS_CONTAINS(bar.styleSheet(), "color: #676767");

@@ -58,22 +58,35 @@ set(PROJECT_HEADERS
     include/CarbonUIVersion.h
     include/CarbonUIClass.h
     include/CarbonUIDialog.h
+    include/CarbonUIQPushButton.h
+    include/CarbonUIQRadioButton.h
+    include/CarbonUIQCheckBox.h
+    include/CarbonUIQLineEdit.h
+    include/CarbonUIQScrollArea.h
+    include/CarbonUIQMenuBar.h
+    include/CarbonUIQToolBar.h
+    include/CarbonUIQTabWidget.h
+    include/CarbonUIQComboBox.h
+    include/CarbonUIQStatusBar.h
+    include/CarbonUIQTreeWidget.h
+    include/CarbonUIQTreeView.h
     include/groupboxcollapser.h
 )
 
 set(PROJECT_SOURCES
     src/CarbonUIClass.cpp
-    src/CarbonUIClass_QRadioButton.cpp
-    src/CarbonUIClass_QCheckBox.cpp
-    src/CarbonUIClass_QLineEdit.cpp
-    src/CarbonUIClass_QPushButton.cpp
-    src/CarbonUIClass_QScrollArea.cpp
-    src/CarbonUIClass_QMenuBar.cpp
-    src/CarbonUIClass_QToolBar.cpp
-    src/CarbonUIClass_QTabWidget.cpp
-    src/CarbonUIClass_QComboBox.cpp
-    src/CarbonUIClass_QStatusBar.cpp
-    src/CarbonUIClass_QTreeWidget.cpp
+    src/CarbonUIQPushButton.cpp
+    src/CarbonUIQRadioButton.cpp
+    src/CarbonUIQCheckBox.cpp
+    src/CarbonUIQLineEdit.cpp
+    src/CarbonUIQScrollArea.cpp
+    src/CarbonUIQMenuBar.cpp
+    src/CarbonUIQToolBar.cpp
+    src/CarbonUIQTabWidget.cpp
+    src/CarbonUIQComboBox.cpp
+    src/CarbonUIQStatusBar.cpp
+    src/CarbonUIQTreeWidget.cpp
+    src/CarbonUIQTreeView.cpp
     src/CarbonUIDialog.cpp
     src/groupboxcollapser.cpp
 )

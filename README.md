@@ -8,7 +8,8 @@ Lightweight Qt Widgets UI helpers library
 
 ## Features
 
-- `CarbonUIClass` — one-stop static style appliers: primary buttons (round/left/rect/right shapes for segmented toolbars), radio buttons (four-corner/left/right/rect shapes + centered child label), self-drawn indicator checkboxes, number-input line edits (centered, select-all-on-focus, C-locale validator), borderless scroll areas, window menu bars and a global `QToolTip` style
+- Self-styling widget classes (one class per widget, `CarbonUI` + the Qt type name): `CarbonUIQPushButton` (round/left/rect/right shapes for segmented toolbars), `CarbonUIQRadioButton` (four-corner/left/right/rect shapes + centered child label), `CarbonUIQCheckBox` (self-drawn indicator), `CarbonUIQLineEdit` (centered, select-all-on-focus, C-locale validator), `CarbonUIQScrollArea`, `CarbonUIQMenuBar`, `CarbonUIQToolBar`, `CarbonUIQTabWidget`, `CarbonUIQComboBox`, `CarbonUIQStatusBar`, `CarbonUIQTreeWidget`, `CarbonUIQTreeView`; each constructor applies its own style, and the static `applyStyle()` restyles an existing widget of the same Qt type
+- `CarbonUIClass` — global helpers only: a `QToolTip` app-wide rule and recursive label recolouring
 - `QGroupBoxCollapser` — turns any `QGroupBox` into an animated collapsible panel (title becomes a checkable tool button, body collapses with a 180 ms `maximumHeight` animation)
 - Dark carbon theme with consistent palette (`#0d0d0d` window, `#cdcdcd`/`#ffffff` text, `#2d2d2d`/`#333333` control backgrounds, `#0078d4`-family accents)
 - `carbonui_cli` — headless widget screenshot / QSS export CLI for Agents and CI
@@ -109,20 +110,26 @@ target_link_libraries(MyApp PRIVATE CarbonUI Qt5::Widgets Qt5::Core)
 Include headers with:
 
 ```cpp
-#include <CarbonUIClass.h>       // style appliers (CarbonUIClass)
+#include <CarbonUIQPushButton.h>  // one header per widget class
+#include <CarbonUIQRadioButton.h>
+#include <CarbonUIClass.h>       // global helpers (QToolTip, recursive labels)
 #include <groupboxcollapser.h>   // QGroupBoxCollapser
 #include <CarbonUIVersion.h>     // CARBONUI_VERSION_* macros
 #include <carbonui_global.h>     // export/import macros
 ```
 
-Typical calls (all static functions, GUI thread only):
+Typical usage (GUI thread only) — construct the styled widget, or restyle an existing one:
 
 ```cpp
-CarbonUIClass::applyButtonStyle(button);                        // round all corners
-CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_LeftRound); // segmented bar, left cell
-CarbonUIClass::applyCheckStyle(checkBox);                       // self-drawn indicator
-CarbonUIClass::applyLineEditStyle_numberInput(lineEdit, 120);   // fixed 120 px
-CarbonUIClass::applyTooltipStyle();                             // global QToolTip rule
+auto* button = new CarbonUIQPushButton(QStringLiteral("OK"), parent);  // round all corners
+auto* radio = new CarbonUIQRadioButton(QStringLiteral("Left"), parent,
+                                      CarbonUIQRadioButton::Radio_LeftRound); // segmented bar
+auto* checkBox = new CarbonUIQCheckBox(parent);                        // self-drawn indicator
+auto* lineEdit = new CarbonUIQLineEdit(parent, 120);                   // fixed 120 px
+auto* tabs = new CarbonUIQTabWidget(parent);
+
+CarbonUIQPushButton::applyStyle(existingButton, CarbonUIQPushButton::Shape_Rectangle);
+CarbonUIClass::applyTooltipStyle();                                    // global QToolTip rule
 
 QGroupBoxCollapser* c = QGroupBoxCollapser::installIntoGroupBox(groupBox);
 c->addWidget(someChild);        // add content to the collapsible body

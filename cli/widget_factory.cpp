@@ -26,6 +26,15 @@
 #include <QtWidgets/QTreeWidget>
 #include <QtWidgets/QVBoxLayout>
 
+#include "CarbonUIQCheckBox.h"
+#include "CarbonUIQComboBox.h"
+#include "CarbonUIQLineEdit.h"
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
+#include "CarbonUIQStatusBar.h"
+#include "CarbonUIQTabWidget.h"
+#include "CarbonUIQTreeWidget.h"
+
 #include "cli_parser.h"
 #include "groupboxcollapser.h"
 
@@ -43,14 +52,14 @@ QString textOr(const WidgetSpec& spec, const QString& fallback)
 /// @brief button / radio 的外形由字符串映射而来，非法时写 @p error 并返回 false。
 bool buildButton(QWidget** out, const WidgetSpec& spec, QString* error)
 {
-    CarbonUIClass::ButtonShape shape = CarbonUIClass::Shape_RoundAll;
+    CarbonUIQPushButton::ButtonShape shape = CarbonUIQPushButton::Shape_RoundAll;
     if (!parseButtonShape(spec.shape, &shape))
     {
         *error = QStringLiteral("未知的 --shape 取值 %1（允许 round|left|right|rect）").arg(spec.shape);
         return false;
     }
     auto* btn = new QPushButton(textOr(spec, QStringLiteral("Confirm")));
-    CarbonUIClass::applyButtonStyle(btn, shape);
+    CarbonUIQPushButton::applyStyle(btn, shape);
     if (spec.state == QLatin1String("disabled"))
         btn->setEnabled(false);
     btn->resize(120, 36);
@@ -60,14 +69,14 @@ bool buildButton(QWidget** out, const WidgetSpec& spec, QString* error)
 
 bool buildRadio(QWidget** out, const WidgetSpec& spec, QString* error)
 {
-    CarbonUIClass::RadioShape shape = CarbonUIClass::Radio_FourRound;
+    CarbonUIQRadioButton::RadioShape shape = CarbonUIQRadioButton::Radio_FourRound;
     if (!parseRadioShape(spec.shape, &shape))
     {
         *error = QStringLiteral("未知的 --shape 取值 %1（允许 round|left|right|rect）").arg(spec.shape);
         return false;
     }
     auto* rb = new QRadioButton(textOr(spec, QStringLiteral("Mode")));
-    CarbonUIClass::applyRadioStyle(rb, shape);
+    CarbonUIQRadioButton::applyStyle(rb, shape);
     if (spec.state == QLatin1String("checked"))
         rb->setChecked(true);
     if (spec.state == QLatin1String("disabled"))
@@ -81,7 +90,7 @@ bool buildCheckbox(QWidget** out, const WidgetSpec& spec, QString* error)
 {
     Q_UNUSED(error);
     auto* cb = new QCheckBox();
-    CarbonUIClass::applyCheckStyle(cb);
+    CarbonUIQCheckBox::applyStyle(cb);
     if (spec.state != QLatin1String("normal"))
         cb->setChecked(spec.state == QLatin1String("checked"));
     if (spec.state == QLatin1String("disabled"))
@@ -95,7 +104,7 @@ bool buildLineEdit(QWidget** out, const WidgetSpec& spec, QString* error)
 {
     Q_UNUSED(error);
     auto* le = new QLineEdit(textOr(spec, QStringLiteral("42.5")));
-    CarbonUIClass::applyLineEditStyle_numberInput(le);
+    CarbonUIQLineEdit::applyStyle(le);
     if (spec.state == QLatin1String("disabled"))
         le->setEnabled(false);
     le->resize(120, 28);
@@ -108,7 +117,7 @@ bool buildTab(QWidget** out, const WidgetSpec& spec, QString* error)
     Q_UNUSED(spec);
     Q_UNUSED(error);
     auto* tw = new QTabWidget();
-    CarbonUIClass::setupTabWidgetStyle(tw);
+    CarbonUIQTabWidget::applyStyle(tw);
     auto* first = new QWidget();
     auto* layout = new QVBoxLayout(first);
     layout->addWidget(new QLabel(QStringLiteral("first page")));
@@ -124,7 +133,7 @@ bool buildCombo(QWidget** out, const WidgetSpec& spec, QString* error)
 {
     Q_UNUSED(error);
     auto* combo = new QComboBox();
-    CarbonUIClass::setupComboBoxStyle(combo);
+    CarbonUIQComboBox::applyStyle(combo);
     combo->addItem(textOr(spec, QStringLiteral("Item one")));
     combo->addItem(QStringLiteral("Item two"));
     if (spec.state == QLatin1String("disabled"))
@@ -145,7 +154,7 @@ bool buildTree(QWidget** out, const WidgetSpec& spec, QString* error)
     new QTreeWidgetItem(root, QStringList() << QStringLiteral("width") << QStringLiteral("320"));
     new QTreeWidgetItem(root, QStringList() << QStringLiteral("height") << QStringLiteral("240"));
     tree->expandAll();
-    CarbonUIClass::applyTreeWidgetStyle(tree);
+    CarbonUIQTreeWidget::applyStyle(tree);
     tree->resize(260, 150);
     *out = tree;
     return true;
@@ -155,7 +164,7 @@ bool buildStatusBar(QWidget** out, const WidgetSpec& spec, QString* error)
 {
     Q_UNUSED(error);
     auto* bar = new QStatusBar();
-    CarbonUIClass::setupQStatusBarStyle(bar);
+    CarbonUIQStatusBar::applyStyle(bar);
     bar->showMessage(textOr(spec, QStringLiteral("Ready")));
     bar->resize(320, 24);
     *out = bar;
@@ -171,7 +180,7 @@ bool buildGroupBox(QWidget** out, const WidgetSpec& spec, QString* error)
     auto* layout = new QVBoxLayout(box);
     layout->addWidget(new QLabel(QStringLiteral("body text")));
     auto* action = new QPushButton(QStringLiteral("Action"));
-    CarbonUIClass::applyButtonStyle(action);
+    CarbonUIQPushButton::applyStyle(action);
     layout->addWidget(action);
     const bool expanded = spec.state != QLatin1String("collapsed");
     QGroupBoxCollapser::installIntoGroupBox(box, nullptr, expanded);

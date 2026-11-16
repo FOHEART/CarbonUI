@@ -25,8 +25,8 @@ namespace cli {
  *
  * @details
  * 控件建在一块 8px 边距、panel 底色 \#272727 的宿主上，调用相应
- * `CarbonUIClass::applyXxxStyle/setupXxxStyle` 后 `QWidget::grab()` 抓帧，
- * 全程不 `show()` 任何窗口（QPA 固定 offscreen），可在 CI 无头环境运行。
+ * `CarbonUIQ*::applyStyle` 后 `QWidget::grab()` 抓帧，全程不 `show()` 任何
+ * 窗口（QPA 固定 offscreen），可在 CI 无头环境运行。
  *
  * 支持的 `--widget`：`button | radio | checkbox | lineedit | tab | combo |
  * tree | statusbar | groupbox`（与 cli_parser.h 的 widgetTypes() 一致）。

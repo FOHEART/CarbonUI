@@ -41,7 +41,12 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 
-#include "CarbonUIClass.h"
+#include "CarbonUIQCheckBox.h"
+#include "CarbonUIQLineEdit.h"
+#include "CarbonUIQPushButton.h"
+#include "CarbonUIQRadioButton.h"
+#include "CarbonUIQTabWidget.h"
+#include "CarbonUIQTreeWidget.h"
 #include "groupboxcollapser.h"
 #include "qt_test_support.h"
 
@@ -80,7 +85,7 @@ TEST(RenderEvidence, ButtonRendersAccentFillWithRoundedCorners)
     QWidget* host = makeBackdrop(160, 72);
     auto* button = new QPushButton(QStringLiteral("OK"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("01-button-round-all.png"));
     ASSERT_FALSE(image.isNull());
@@ -103,7 +108,7 @@ TEST(RenderEvidence, RectangleButtonKeepsSquareCorner)
     QWidget* host = makeBackdrop(160, 72);
     auto* button = new QPushButton(QStringLiteral("OK"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button, CarbonUIClass::Shape_Rectangle);
+    CarbonUIQPushButton::applyStyle(button, CarbonUIQPushButton::Shape_Rectangle);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("02-button-rectangle.png"));
     ASSERT_FALSE(image.isNull());
@@ -124,7 +129,7 @@ TEST(RenderEvidence, ButtonTextIsReallyPainted)
     QWidget* host = makeBackdrop(160, 72);
     auto* button = new QPushButton(QStringLiteral("Save"), host);
     button->setGeometry(20, 20, 120, 32);
-    CarbonUIClass::applyButtonStyle(button);
+    CarbonUIQPushButton::applyStyle(button);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("03-button-with-text.png"));
 
@@ -159,7 +164,7 @@ TEST(RenderEvidence, CheckedRadioRendersAccentFillWithRoundedCorners)
     QWidget* host = makeBackdrop(140, 60);
     auto* radio = new QRadioButton(QStringLiteral("Mode A"), host);
     radio->setGeometry(20, 16, 100, 28);
-    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 72);
+    CarbonUIQRadioButton::applyStyle(radio, CarbonUIQRadioButton::Radio_FourRound, 72);
     radio->setChecked(true);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("04-radio-checked.png"));
@@ -177,7 +182,7 @@ TEST(RenderEvidence, UncheckedRadioRendersDarkPanel)
     QWidget* host = makeBackdrop(140, 60);
     auto* radio = new QRadioButton(QStringLiteral("Mode A"), host);
     radio->setGeometry(20, 16, 100, 28);
-    CarbonUIClass::applyRadioStyle(radio, CarbonUIClass::Radio_FourRound, 72);
+    CarbonUIQRadioButton::applyStyle(radio, CarbonUIQRadioButton::Radio_FourRound, 72);
     radio->setChecked(false);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("05-radio-unchecked.png"));
@@ -195,9 +200,9 @@ TEST(RenderEvidence, SegmentShapesRenderAsOneContinuousBar)
     auto* left = new QRadioButton(QStringLiteral("L"));
     auto* middle = new QRadioButton(QStringLiteral("M"));
     auto* right = new QRadioButton(QStringLiteral("R"));
-    CarbonUIClass::applyRadioStyle(left, CarbonUIClass::Radio_LeftRound, 60);
-    CarbonUIClass::applyRadioStyle(middle, CarbonUIClass::Radio_Rectangle, 60);
-    CarbonUIClass::applyRadioStyle(right, CarbonUIClass::Radio_RightRound, 60);
+    CarbonUIQRadioButton::applyStyle(left, CarbonUIQRadioButton::Radio_LeftRound, 60);
+    CarbonUIQRadioButton::applyStyle(middle, CarbonUIQRadioButton::Radio_Rectangle, 60);
+    CarbonUIQRadioButton::applyStyle(right, CarbonUIQRadioButton::Radio_RightRound, 60);
     // 同一个父控件里的 QRadioButton 默认自动互斥，会互相取消勾选；
     // 分段选择器本来就是"每段各自独立"，因此必须关掉互斥。
     left->setAutoExclusive(false);
@@ -246,7 +251,7 @@ TEST(RenderEvidence, CheckboxIndicatorColourFollowsCheckedState)
     QWidget* host = makeBackdrop(48, 48);
     auto* checkBox = new QCheckBox(host);
     checkBox->setGeometry(16, 16, 16, 16);
-    CarbonUIClass::applyCheckStyle(checkBox);
+    CarbonUIQCheckBox::applyStyle(checkBox);
 
     const QImage uncheckedImage = carbonui_test::renderToArtifact(host, QStringLiteral("07-checkbox-unchecked.png"));
     checkBox->setChecked(true);
@@ -265,7 +270,7 @@ TEST(RenderEvidence, LineEditRendersDarkRoundedFieldWithBorder)
     QWidget* host = makeBackdrop(220, 60);
     auto* edit = new QLineEdit(host);
     edit->setGeometry(20, 16, 180, 28);
-    CarbonUIClass::applyLineEditStyle_numberInput(edit);
+    CarbonUIQLineEdit::applyStyle(edit);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("09-line-edit.png"));
     ASSERT_FALSE(image.isNull());
@@ -284,7 +289,7 @@ TEST(RenderEvidence, TabWidgetRendersPaneAndSelectedTab)
     tabs->setGeometry(10, 10, 240, 120);
     tabs->addTab(new QLabel(QStringLiteral("page one")), QStringLiteral("One"));
     tabs->addTab(new QLabel(QStringLiteral("page two")), QStringLiteral("Two"));
-    CarbonUIClass::setupTabWidgetStyle(tabs);
+    CarbonUIQTabWidget::applyStyle(tabs);
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("10-tab-widget.png"));
     ASSERT_FALSE(image.isNull());
@@ -309,7 +314,7 @@ TEST(RenderEvidence, TreeWidgetRendersHeaderSelectionBandAndBorder)
         item->setText(0, QStringLiteral("row %1").arg(i));
         item->setText(1, QStringLiteral("v%1").arg(i));
     }
-    CarbonUIClass::applyTreeWidgetStyle(tree);
+    CarbonUIQTreeWidget::applyStyle(tree);
     tree->setCurrentItem(tree->topLevelItem(1));
 
     const QImage image = carbonui_test::renderToArtifact(host, QStringLiteral("11-tree-widget.png"));
