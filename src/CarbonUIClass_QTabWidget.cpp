@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::setupTabWidgetStyle：面板底色、选中页签高亮、
+ * 实现 @ref CarbonUIClass::setupTabWidgetStyle ——面板底色、选中页签高亮、
  * 右侧预留 66px 滚动区。公开接口的完整参数说明写在 CarbonUIClass.h；
  * 本文件只补充实现细节。
  *

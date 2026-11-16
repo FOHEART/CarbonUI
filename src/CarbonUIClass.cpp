@@ -14,9 +14,9 @@
  *
  * @details
  * 本文件只保留作用于全局或不绑定单一控件类的样式助手：
- * - @ref CarbonUIClass::applyTooltipStyle：向 `qApp` 追加全局 QToolTip 规则
+ * - @ref CarbonUIClass::applyTooltipStyle ——向 `qApp` 追加全局 QToolTip 规则
  *   （本类唯一修改全局状态的接口）；
- * - @ref CarbonUIClass::setWidgetLabelsStyleRecursively：递归改写后代
+ * - @ref CarbonUIClass::setWidgetLabelsStyleRecursively ——递归改写后代
  *   QLabel 的文字颜色。
  *
  * 单控件助手按控件类拆分到同名子文件（与 CarbonUIClass_QRadioButton.cpp

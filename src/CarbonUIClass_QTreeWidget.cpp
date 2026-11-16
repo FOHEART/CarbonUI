@@ -14,8 +14,8 @@
  *
  * @details
  * 两个树类助手共置一文件：
- * - @ref CarbonUIClass::applyTreeWidgetStyle：压平缩进、加粗表头、整行选中色；
- * - @ref CarbonUIClass::applyTreeViewStyle：保留 14px 缩进与展开箭头
+ * - @ref CarbonUIClass::applyTreeWidgetStyle ——压平缩进、加粗表头、整行选中色；
+ * - @ref CarbonUIClass::applyTreeViewStyle ——保留 14px 缩进与展开箭头
  *   （箭头图片路径 `:/images/...`，与 `carbonui_rcc.qrc` 的 `/img` 前缀不一致，
  *   资源不存在时箭头不显示），禁止编辑。
  * 公开接口的完整参数说明写在 CarbonUIClass.h；本文件只补充实现细节。

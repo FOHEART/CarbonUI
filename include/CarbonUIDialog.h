@@ -15,8 +15,8 @@
  * @details
  * 复刻 CarbonUI 产品线里的 About 对话框外观：无系统边框（FramelessWindowHint）、
  * 9px 圆角深色面板，顶部 46px 纯黑标题条（左侧白色加粗标题、右侧白色关闭
- * 按钮），下方 #212121 正文区按行排布 "名称: 取值" 文本。颜色取自界面规范：
- * 标题条 #0f0f0f、正文 #212121、标题 #ffffff、行文本 #cdcdcd。
+ * 按钮），下方 \#212121 正文区按行排布 "名称: 取值" 文本。颜色取自界面规范：
+ * 标题条 \#0f0f0f、正文 \#212121、标题 \#ffffff、行文本 \#cdcdcd。
  *
  * 与 CarbonUIClass 静态样式助手的分工：那些函数只往调用方已建好的控件上刷
  * QSS；本类自己负责结构与交互（圆角透明窗、标题拖拽移动、关闭按钮），调用方
@@ -64,7 +64,7 @@ class QWidget;
  * @endcode
  *
  * 交互：按住标题条可拖动窗口（无系统边框时的补偿）；Esc 与关闭按钮都走
- * QDialog 默认的 reject 路径。默认尺寸由内容与 @ref minimumWidth 共同决定
+ * QDialog 默认的 reject 路径。默认尺寸由内容与 @c minimumWidth 共同决定
  *（`adjustSize()` 后取 sizeHint）。
  */
 class CARBONUI_DLL_API CarbonUIDialog : public QDialog
@@ -96,7 +96,7 @@ public:
      * @brief 追加一行 "名称: 取值" 信息行。
      *
      * @details
-     * 行文本整体使用 #cdcdcd，与参考界面的 About 对话框一致；不做自动换行，
+     * 行文本整体使用 \#cdcdcd，与参考界面的 About 对话框一致；不做自动换行，
      * 超长取值会撑宽对话框（例如 40 位修订号），把对话框放在滚动容器里不是
      * 本类的职责。
      *

@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::setupToolBarStyle：禁止拖动/浮动、固定 32px
+ * 实现 @ref CarbonUIClass::setupToolBarStyle ——禁止拖动/浮动、固定 32px
  * 上限高、28px 图标与深底配色。公开接口的完整参数说明写在
  * CarbonUIClass.h；本文件只补充实现细节。
  *

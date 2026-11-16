@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::setupComboBoxStyle：圆角输入框外观 + 资源图片
+ * 实现 @ref CarbonUIClass::setupComboBoxStyle ——圆角输入框外观 + 资源图片
  * 下拉箭头（图片来源 `:/img/Resources/img/arrow_down.png`，依赖
  * `carbonui_rcc.qrc` 的 `/img` 前缀）。公开接口的完整参数说明写在
  * CarbonUIClass.h；本文件只补充实现细节。

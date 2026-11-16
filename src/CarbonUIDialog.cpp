@@ -63,8 +63,6 @@ const char* const kRowStyle = "color: #cdcdcd; background-color: transparent;";
 
 /**
  * @brief 构造对话框：装配控件树并设置无边框圆角窗口（详见 CarbonUIDialog.h）。
- * @param[in] title  标题栏文字，可为空串。
- * @param[in] parent 父窗口指针，可为 NULL。
  */
 CarbonUIDialog::CarbonUIDialog(const QString& title, QWidget* parent)
     : QDialog(parent),
@@ -146,7 +144,6 @@ void CarbonUIDialog::buildUi()
 
 /**
  * @brief 更新标题文字（详见 CarbonUIDialog.h）。
- * @param[in] title 新标题，可为空串。
  */
 void CarbonUIDialog::setTitleText(const QString& title)
 {
@@ -167,8 +164,6 @@ QString CarbonUIDialog::titleText() const
 
 /**
  * @brief 追加 "名称: 取值" 信息行（详见 CarbonUIDialog.h）。
- * @param[in] label 行名称，可为空串。
- * @param[in] value 行取值，可为空串。
  */
 void CarbonUIDialog::addInfoRow(const QString& label, const QString& value)
 {
@@ -177,7 +172,6 @@ void CarbonUIDialog::addInfoRow(const QString& label, const QString& value)
 
 /**
  * @brief 追加原样文本信息行（详见 CarbonUIDialog.h）。
- * @param[in] text 行文本，可为空串。
  */
 void CarbonUIDialog::addInfoRow(const QString& text)
 {
@@ -197,7 +191,6 @@ void CarbonUIDialog::addInfoRow(const QString& text)
 
 /**
  * @brief 记录标题条拖拽起点（详见 CarbonUIDialog.h）。
- * @param[in] event 鼠标事件，不可为 NULL。
  */
 void CarbonUIDialog::mousePressEvent(QMouseEvent* event)
 {
@@ -214,7 +207,6 @@ void CarbonUIDialog::mousePressEvent(QMouseEvent* event)
 
 /**
  * @brief 拖拽移动窗口（详见 CarbonUIDialog.h）。
- * @param[in] event 鼠标事件，不可为 NULL。
  */
 void CarbonUIDialog::mouseMoveEvent(QMouseEvent* event)
 {
@@ -229,7 +221,6 @@ void CarbonUIDialog::mouseMoveEvent(QMouseEvent* event)
 
 /**
  * @brief 结束拖拽（详见 CarbonUIDialog.h）。
- * @param[in] event 鼠标事件，不可为 NULL。
  */
 void CarbonUIDialog::mouseReleaseEvent(QMouseEvent* event)
 {

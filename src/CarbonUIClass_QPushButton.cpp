@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::applyButtonStyle：按 ButtonShape 决定四角圆角，
+ * 实现 @ref CarbonUIClass::applyButtonStyle ——按 ButtonShape 决定四角圆角，
  * 追加悬停 / 按下 / 禁用三态配色。公开接口的完整参数说明写在
  * CarbonUIClass.h；本文件只补充实现细节。
  *

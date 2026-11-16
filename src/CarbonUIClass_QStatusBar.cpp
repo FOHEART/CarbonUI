@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::setupQStatusBarStyle：深色底 + 次级文字色。
+ * 实现 @ref CarbonUIClass::setupQStatusBarStyle ——深色底 + 次级文字色。
  * 公开接口的完整参数说明写在 CarbonUIClass.h；本文件只补充实现细节。
  *
  * 线程约定：只允许在 GUI 主线程调用（直接操作 QWidget）。

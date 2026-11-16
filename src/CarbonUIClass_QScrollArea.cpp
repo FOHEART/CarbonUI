@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::applyScrollAreaStyle：无边框、收窄到 4px 的
+ * 实现 @ref CarbonUIClass::applyScrollAreaStyle ——无边框、收窄到 4px 的
  * 纵向滚动条。公开接口的完整参数说明写在 CarbonUIClass.h；本文件只补充
  * 实现细节。
  *

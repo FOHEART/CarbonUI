@@ -13,7 +13,7 @@
  * @ingroup carbonui
  *
  * @details
- * 实现 @ref CarbonUIClass::setupMenuBarStyle：关闭原生菜单栏、10pt 加粗、
+ * 实现 @ref CarbonUIClass::setupMenuBarStyle ——关闭原生菜单栏、10pt 加粗、
  * 固定 26px 高与深底配色。公开接口的完整参数说明写在 CarbonUIClass.h；
  * 本文件只补充实现细节。
  *
