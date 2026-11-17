@@ -16,10 +16,10 @@
  * 控件外观参照 tools/reference/WidgetWithHeaderButton.png：外层为默认显示的
  * 2px #676767 边框（不依赖 objectName，调用方重命名后仍可见），顶部为略亮的
  * 标题栏，标题栏左侧为控件名称 QLabel，右侧为若干 24x24 图标按钮，
- * 相邻按钮之间插入 1px 深色竖向分割线。按钮点击后统一发出 @ref buttonClicked
- * 信号，并把调用 @ref addButton 时传入的 id 原样回传，由使用方决定具体行为。
+ * 相邻按钮之间插入 1px 深色竖向分割线。按钮点击后统一发出 `buttonClicked`
+ * 信号，并把调用 `addButton` 时传入的 id 原样回传，由使用方决定具体行为。
  *
- * 内容区可通过 @ref contentWidget 取得，使用方自行给它设置布局并放入子控件。
+ * 内容区可通过 `contentWidget` 取得，使用方自行给它设置布局并放入子控件。
  * 本类只负责外观装配、分割线插入与点击信号转发，不解释按钮语义。
  *
  * 线程约定：与所有 QWidget 一样，只允许在 GUI 主线程构造与使用。

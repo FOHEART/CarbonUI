@@ -71,6 +71,7 @@ CarbonUIWidgetWithHdrBtn::CarbonUIWidgetWithHdrBtn(const QString& title, QWidget
 
 /**
  * @brief 自绘 2px #676767 默认边框（详见头文件）。
+ * @param[in,out] event 待处理的绘制事件，不可为 nullptr。
  */
 void CarbonUIWidgetWithHdrBtn::paintEvent(QPaintEvent* event) {
 	QWidget::paintEvent(event);
@@ -114,6 +115,7 @@ void CarbonUIWidgetWithHdrBtn::buildUi() {
 
 /**
  * @brief 设置左上角标题文本（详见头文件）。
+ * @param[in] title 新的标题文本，可为空串。
  */
 void CarbonUIWidgetWithHdrBtn::setTitle(const QString& title) {
 	titleLabel_->setText(title);
@@ -121,6 +123,7 @@ void CarbonUIWidgetWithHdrBtn::setTitle(const QString& title) {
 
 /**
  * @brief 查询当前左上角标题文本（详见头文件）。
+ * @return 当前标题文本。
  */
 QString CarbonUIWidgetWithHdrBtn::title() const {
 	return titleLabel_->text();
@@ -162,6 +165,8 @@ void CarbonUIWidgetWithHdrBtn::addButton(const QString& id, const QIcon& icon,
 
 /**
  * @brief 更新指定 id 按钮的悬停提示（详见头文件）。
+ * @param[in] id      目标按钮标识，不存在时静默返回。
+ * @param[in] toolTip 新的悬停提示。
  */
 void CarbonUIWidgetWithHdrBtn::setButtonToolTip(const QString& id, const QString& toolTip) {
 	auto it = buttons_.find(id);
@@ -172,6 +177,7 @@ void CarbonUIWidgetWithHdrBtn::setButtonToolTip(const QString& id, const QString
 
 /**
  * @brief 查询已添加的图标按钮数量（详见头文件）。
+ * @return 标题栏右侧已添加的图标按钮数量。
  */
 int CarbonUIWidgetWithHdrBtn::buttonCount() const {
 	return buttons_.size();
@@ -179,6 +185,7 @@ int CarbonUIWidgetWithHdrBtn::buttonCount() const {
 
 /**
  * @brief 取得内容区容器（详见头文件）。
+ * @return 内容区容器指针，非 nullptr。
  */
 QWidget* CarbonUIWidgetWithHdrBtn::contentWidget() const {
 	return content_;
