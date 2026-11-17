@@ -24,7 +24,7 @@
  * 明度滑条为纯手绘（QPainter 渐变），鼠标按下/拖动即取色并实时回填右侧输入。
  *
  * 信号：任何来源（选色、滑条、RGB、十六进制、透明度）改变当前颜色都会发
- * @ref colorChanged；Ok / Cancel 按钮分别发 @ref accepted / @ref rejected，
+ * colorChanged 信号；Ok / Cancel 按钮分别发 accepted / rejected 信号，
  * 直接放进 QDialog 时可经这两个信号驱动 accept() / reject()。
  *
  * 用法示例：
@@ -74,7 +74,7 @@ class CARBONUI_DLL_API CarbonUIColorPickWidget : public QWidget {
 	/**
 	 * @brief 设置当前颜色并同步全部子控件（选色区光标、滑条、RGB、十六进制、透明度）。
 	 * @param[in] color 目标颜色，可为无效颜色（此时按黑色处理）。
-	 * @note 不发射 @ref colorChanged，与用户交互路径区分开。
+	 * @note 不发射 colorChanged 信号，与用户交互路径区分开。
 	 */
 	void setColor(const QColor& color);
 
@@ -102,10 +102,19 @@ class CARBONUI_DLL_API CarbonUIColorPickWidget : public QWidget {
 	/// @brief 把当前颜色回填到 RGB / 十六进制 / 透明度输入框（不触发回环）。
 	void syncEditors();
 
-	/// @brief 选色区取色回调：按色相/饱和度更新颜色并通知（@p emitChange 为 true 时发信号）。
+	/**
+	 * @brief 选色区取色回调：按色相/饱和度更新颜色并通知。
+	 * @param[in] hue        色相 [0, 1]。
+	 * @param[in] sat        饱和度 [0, 1]。
+	 * @param[in] val        明度 [0, 1]（来自明度滑条的当前值）。
+	 * @param[in] emitChange true 时发射 colorChanged 信号。
+	 */
 	void applyHsv(double hue, double sat, double val, bool emitChange);
 
-	/// @brief RGB / 十六进制 / 透明度输入回调：按输入更新颜色并同步选色区。
+	/**
+	 * @brief RGB / 十六进制 / 透明度输入回调：按输入更新颜色并同步选色区。
+	 * @param[in] emitChange true 时发射 colorChanged 信号。
+	 */
 	void applyEditorChange(bool emitChange);
 
 	QColor color_ = Qt::black; ///< 当前颜色（含透明度通道）。

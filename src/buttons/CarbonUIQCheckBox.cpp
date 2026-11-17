@@ -473,7 +473,7 @@ void CarbonUIQCheckBox::applyStyle(QCheckBox* cb, CheckIndicatorPosition positio
 }
 
 /**
- * @brief 构造按钮组并装配分段（契约见 CarbonUIQCheckBox.h）。
+ * @brief 构造按钮组并装配分段（参数契约见 CarbonUIQCheckBox.h）。
  *
  * @details
  * 每段一个独立勾选的 QCheckBox，外形由位置决定：首段左两角 10px 圆角、
@@ -482,9 +482,6 @@ void CarbonUIQCheckBox::applyStyle(QCheckBox* cb, CheckIndicatorPosition positio
  * 点击未选中段选中它并取消其余段，点击已选中段不变；默认选中首段，
  * 构造完成后组内始终有且仅有一个选中项。
  * 组内未设 objectName 时使用默认名，分段与文字标签按组名派生命名。
- *
- * @param[in] segmentCount 分段数量，小于 1 按 1 处理。
- * @param[in] parent       父控件指针，**可为 NULL**。
  */
 CarbonUIQCheckButtonGroup::CarbonUIQCheckButtonGroup(int segmentCount, QWidget* parent)
     : QWidget(parent) {
@@ -529,18 +526,17 @@ CarbonUIQCheckButtonGroup::CarbonUIQCheckButtonGroup(int segmentCount, QWidget* 
 }
 
 /**
- * @brief 统一命名按钮组及其全部分段与文字标签（契约见 CarbonUIQCheckBox.h）。
+ * @brief 统一命名按钮组及其全部分段与文字标签（参数契约见 CarbonUIQCheckBox.h）。
  *
- * @param[in] name 组 objectName；分段命名为 `<name>_segment<i>`，分段内的
- *                 文字标签随分段改名为 `<分段名>_label`。
+ * @details 分段命名为 `<name>_segment<i>`，分段内的文字标签随分段改名为
+ *          `<分段名>_label`。
  */
 void CarbonUIQCheckButtonGroup::setGroupObjectName(const QString& name) {
 	setObjectName(name);
 	for (int i = 0; i < m_segments.size(); ++i) {
 		auto* cb = m_segments.at(i);
-		auto* label =
-		    cb->findChild<QLabel*>(cb->objectName() + QStringLiteral("_label"),
-		                           Qt::FindDirectChildrenOnly);
+		auto* label = cb->findChild<QLabel*>(cb->objectName() + QStringLiteral("_label"),
+		                                     Qt::FindDirectChildrenOnly);
 		cb->setObjectName(name + QStringLiteral("_segment%1").arg(i));
 		if (label != nullptr) {
 			label->setObjectName(cb->objectName() + QStringLiteral("_label"));

@@ -121,6 +121,8 @@ QWidget* makeChannelPill(const char* letter, const char* objectName, int maxValu
  */
 class ColorAreaWidget : public QWidget {
   public:
+	/// @brief 构造选色区：固定尺寸并开启鼠标跟踪。
+	/// @param[in] parent 父控件指针，可为 NULL。
 	explicit ColorAreaWidget(QWidget* parent) : QWidget(parent), hue_(0.0), sat_(0.0) {
 		setFixedSize(kAreaWidth, kAreaHeight);
 		setMouseTracking(true);
@@ -130,6 +132,8 @@ class ColorAreaWidget : public QWidget {
 
 	/**
 	 * @brief 同步光标的色相/饱和度并重绘。
+	 * @param[in] hue 色相 [0, 1]。
+	 * @param[in] sat 饱和度 [0, 1]。
 	 */
 	void setHsv(double hue, double sat) {
 		hue_ = clamp01(hue);
@@ -137,10 +141,15 @@ class ColorAreaWidget : public QWidget {
 		update();
 	}
 
+	/// @brief 当前色相 [0, 1]。
 	double hue() const { return hue_; }
+
+	/// @brief 当前饱和度 [0, 1]。
 	double sat() const { return sat_; }
 
   protected:
+	/// @brief 绘制色相/饱和度渐变与圆环光标。
+	/// @param[in] event 事件参数（未使用）。
 	void paintEvent(QPaintEvent* event) override {
 		Q_UNUSED(event);
 		QPainter painter(this);
@@ -165,8 +174,12 @@ class ColorAreaWidget : public QWidget {
 		painter.drawEllipse(cursor, 6.0, 6.0);
 	}
 
+	/// @brief 按下即取色。
+	/// @param[in] event 鼠标事件。
 	void mousePressEvent(QMouseEvent* event) override { pick(event->pos()); }
 
+	/// @brief 左键拖动持续取色。
+	/// @param[in] event 鼠标事件。
 	void mouseMoveEvent(QMouseEvent* event) override {
 		if (event->buttons() & Qt::LeftButton) {
 			pick(event->pos());
@@ -176,6 +189,7 @@ class ColorAreaWidget : public QWidget {
   private:
 	/**
 	 * @brief 鼠标取色：坐标换算成色相/饱和度后回调上交。
+	 * @param[in] pos 控件坐标，越界值按边界裁剪。
 	 */
 	void pick(const QPoint& pos) {
 		const double hue = clamp01((double)pos.x() / (double)(width() - 1));
@@ -196,6 +210,8 @@ class ColorAreaWidget : public QWidget {
  */
 class ValueSliderWidget : public QWidget {
   public:
+	/// @brief 构造明度滑条：固定尺寸并开启鼠标跟踪。
+	/// @param[in] parent 父控件指针，可为 NULL。
 	explicit ValueSliderWidget(QWidget* parent) : QWidget(parent), val_(1.0) {
 		setFixedSize(kSliderWidth, kAreaHeight);
 		setMouseTracking(true);
@@ -205,15 +221,19 @@ class ValueSliderWidget : public QWidget {
 
 	/**
 	 * @brief 同步明度并重绘。
+	 * @param[in] val 明度 [0, 1]，越界值按边界裁剪。
 	 */
 	void setValue(double val) {
 		val_ = clamp01(val);
 		update();
 	}
 
+	/// @brief 当前明度 [0, 1]。
 	double value() const { return val_; }
 
   protected:
+	/// @brief 绘制上白下黑渐变与明度横线光标。
+	/// @param[in] event 事件参数（未使用）。
 	void paintEvent(QPaintEvent* event) override {
 		Q_UNUSED(event);
 		QPainter painter(this);
@@ -230,8 +250,12 @@ class ValueSliderWidget : public QWidget {
 		painter.drawLine(0, qRound(y), width() - 1, qRound(y));
 	}
 
+	/// @brief 按下即取值。
+	/// @param[in] event 鼠标事件。
 	void mousePressEvent(QMouseEvent* event) override { pick(event->pos()); }
 
+	/// @brief 左键拖动持续取值。
+	/// @param[in] event 鼠标事件。
 	void mouseMoveEvent(QMouseEvent* event) override {
 		if (event->buttons() & Qt::LeftButton) {
 			pick(event->pos());
@@ -241,6 +265,7 @@ class ValueSliderWidget : public QWidget {
   private:
 	/**
 	 * @brief 鼠标取值：纵坐标换算成明度后回调上交。
+	 * @param[in] pos 控件坐标，越界值按边界裁剪。
 	 */
 	void pick(const QPoint& pos) {
 		const double val = 1.0 - clamp01((double)pos.y() / (double)(height() - 1));
