@@ -76,25 +76,27 @@ set(PROJECT_HEADERS
     include/groupboxcollapser.h
 )
 
+# 源文件按控件类别分目录：core=全局助手 / buttons=按钮 / inputs=输入 /
+# frame=菜单栏工具栏状态栏 / containers=容器与滚动 / views=项视图 / dialogs=对话框
 set(PROJECT_SOURCES
-    src/CarbonUIClass.cpp
-    src/CarbonUIQPushButton.cpp
-    src/CarbonUIQRadioButton.cpp
-    src/CarbonUIQCheckBox.cpp
-    src/CarbonUIQLineEdit.cpp
-    src/CarbonUIQScrollArea.cpp
-    src/CarbonUIQScrollBar.cpp
-    src/CarbonUIQMenuBar.cpp
-    src/CarbonUIQToolBar.cpp
-    src/CarbonUIQTabWidget.cpp
-    src/CarbonUIQComboBox.cpp
-    src/CarbonUIQStatusBar.cpp
-    src/CarbonUIQTreeWidget.cpp
-    src/CarbonUIQTreeView.cpp
-    src/CarbonUIAboutQtDialog.cpp
-    src/CarbonUIDialog.cpp
-    src/CarbonUIWidgetWithHdrBtn.cpp
-    src/groupboxcollapser.cpp
+    src/core/CarbonUIClass.cpp
+    src/buttons/CarbonUIQPushButton.cpp
+    src/buttons/CarbonUIQRadioButton.cpp
+    src/buttons/CarbonUIQCheckBox.cpp
+    src/inputs/CarbonUIQLineEdit.cpp
+    src/containers/CarbonUIQScrollArea.cpp
+    src/containers/CarbonUIQScrollBar.cpp
+    src/frame/CarbonUIQMenuBar.cpp
+    src/frame/CarbonUIQToolBar.cpp
+    src/containers/CarbonUIQTabWidget.cpp
+    src/inputs/CarbonUIQComboBox.cpp
+    src/frame/CarbonUIQStatusBar.cpp
+    src/views/CarbonUIQTreeWidget.cpp
+    src/views/CarbonUIQTreeView.cpp
+    src/dialogs/CarbonUIAboutQtDialog.cpp
+    src/dialogs/CarbonUIDialog.cpp
+    src/containers/CarbonUIWidgetWithHdrBtn.cpp
+    src/containers/groupboxcollapser.cpp
 )
 
 # Qt Designer UI file(s)
