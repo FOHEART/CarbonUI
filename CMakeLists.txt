@@ -57,6 +57,7 @@ set(PROJECT_HEADERS
     include/carbonui_global.h
     include/CarbonUIVersion.h
     include/CarbonUIClass.h
+    include/CarbonUIAboutQtDialog.h
     include/CarbonUIDialog.h
     include/CarbonUIQPushButton.h
     include/CarbonUIQRadioButton.h
@@ -90,6 +91,7 @@ set(PROJECT_SOURCES
     src/CarbonUIQStatusBar.cpp
     src/CarbonUIQTreeWidget.cpp
     src/CarbonUIQTreeView.cpp
+    src/CarbonUIAboutQtDialog.cpp
     src/CarbonUIDialog.cpp
     src/CarbonUIWidgetWithHdrBtn.cpp
     src/groupboxcollapser.cpp
