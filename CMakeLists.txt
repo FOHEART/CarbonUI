@@ -69,6 +69,7 @@ set(PROJECT_HEADERS
     include/CarbonUIQToolBar.h
     include/CarbonUIQTabWidget.h
     include/CarbonUIQComboBox.h
+    include/CarbonUIColorPickWidget.h
     include/CarbonUIQStatusBar.h
     include/CarbonUIQTreeWidget.h
     include/CarbonUIQTreeView.h
@@ -90,6 +91,7 @@ set(PROJECT_SOURCES
     src/frame/CarbonUIQToolBar.cpp
     src/containers/CarbonUIQTabWidget.cpp
     src/inputs/CarbonUIQComboBox.cpp
+    src/inputs/CarbonUIColorPickWidget.cpp
     src/frame/CarbonUIQStatusBar.cpp
     src/views/CarbonUIQTreeWidget.cpp
     src/views/CarbonUIQTreeView.cpp

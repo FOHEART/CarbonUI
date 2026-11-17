@@ -29,8 +29,10 @@
 #include "CarbonUIQCheckBox.h"
 #include <QtCore/QEvent>
 #include <QtGui/QMouseEvent>
+#include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QSizePolicy>
 #include <QtWidgets/QStyle>
 
 namespace {
@@ -279,6 +281,127 @@ void applyCheckStyleIndicatorRight(QCheckBox* cb) {
 
 	cb->installEventFilter(new RightIndicatorWatcher(ring, dot, cb));
 }
+
+/**
+ * @brief 分段式复选框的自绘交互过滤器：启用态换色 + 左键切换 + 文字同步。
+ *
+ * @details
+ * 外观配色（填充式三态）已全部写进 QSS（:hover / :checked / :disabled 伪态
+ * 原生生效），过滤器只承担三件事：原生 indicator 压成 0x0 后点击命中需要
+ * 接管（左键释放转给 @c click()，经正常点击管线走 checked 切换，从而尊重
+ * 所在 QButtonGroup 的互斥语义）；分段禁用/启用时同步文字子标签颜色
+ * （QSS 的 :disabled 伪态管不到子标签）；以及"文字搬进
+ * `<objectName>_label` 子标签"的同步，时机与 RightIndicatorWatcher 相同
+ * （Paint / Show / Resize / Polish / LayoutRequest / LanguageChange），
+ * 调用方仍可用 @c QCheckBox::setText() 改文案。
+ */
+class SegmentWatcher : public QObject {
+  public:
+	/**
+	 * @brief 构造过滤器并挂到复选框上。
+	 * @param[in] label 文字子标签，不可为 NULL，不取得所有权。
+	 * @param[in] cb    被监视的复选框，不可为 NULL，作为本对象的父对象。
+	 */
+	SegmentWatcher(QLabel* label, QCheckBox* cb) : QObject(cb), m_label(label), m_cb(cb) {}
+
+	/**
+	 * @brief 处理启用态变化、左键释放与文字同步。
+	 *
+	 * @param[in] watched 事件接收者，本过滤器只处理复选框自身的事件。
+	 * @param[in] event   事件对象，不可为 NULL。
+	 * @return true 表示事件已被处理且不再向下传递（仅左键释放时）；
+	 *         其余情况返回基类结果 false。
+	 */
+	bool eventFilter(QObject* watched, QEvent* event) override {
+		switch (event->type()) {
+		case QEvent::EnabledChange:
+			m_label->setStyleSheet(QString("color: %1; background-color: transparent; ")
+			                           .arg(m_cb->isEnabled() ? QStringLiteral("#ffffff")
+			                                                  : QStringLiteral("#cfcfcf")));
+			break;
+		case QEvent::MouseButtonRelease: {
+			auto* me = static_cast<QMouseEvent*>(event);
+			if (me->button() == Qt::LeftButton) {
+				// 走正常点击管线而非直接取反：QButtonGroup exclusive 下点击
+				// 已选中段不会取消自己（单选语义），未选中段会同时取消其余段。
+				m_cb->click();
+				return true;
+			}
+			break;
+		}
+		case QEvent::Paint:
+		case QEvent::Show:
+		case QEvent::Resize:
+		case QEvent::Polish:
+		case QEvent::PolishRequest:
+		case QEvent::LayoutRequest:
+		case QEvent::LanguageChange:
+			syncStyledCheckboxText(m_cb);
+			break;
+		default:
+			break;
+		}
+		return QObject::eventFilter(watched, event);
+	}
+
+  private:
+	QLabel* m_label; ///< 文字子标签，不取得所有权。
+	QCheckBox* m_cb; ///< 被监视的复选框，同时是本对象的父对象。
+};
+
+/**
+ * @brief 把复选框装配成"分段式"外观（供 CarbonUIQCheckButtonGroup 使用）。
+ *
+ * @details
+ * 配色契约以 tools/reference/GroupCheckBox.png 为准：未选中 \#676767 灰底
+ * 白字、选中 \#009ee8 蓝底白字，无边框、min-height 28px；悬停在两态上各
+ * 加一档提亮（未选中 \#767676 / 选中 \#00b0ff），禁用沿用 \#636363 底
+ * \#cfcfcf 字。圆角由四个角参数决定（首段左圆 / 末段右圆 / 中段直角）。
+ * 压平原生 indicator，文字搬进居中的 `<objectName>_label` 子标签；左键
+ * 切换与启用态换色交给 SegmentWatcher。
+ *
+ * @param[in,out] cb 目标复选框，**不可为 NULL**（调用方已判空）。
+ * @param[in]  tl    左上角圆角，取值 >= 0。
+ * @param[in]  tr    右上角圆角，取值 >= 0。
+ * @param[in]  br    右下角圆角，取值 >= 0。
+ * @param[in]  bl    左下角圆角，取值 >= 0。
+ */
+void applyCheckStyleSegment(QCheckBox* cb, int tl, int tr, int br, int bl) {
+	QString style = QString("QCheckBox { background-color: #676767; color: #ffffff; border: "
+	                        "none; padding: 0px 2px; min-height: 28px; "
+	                        "border-top-left-radius: %1px; border-bottom-left-radius: %2px; "
+	                        "border-top-right-radius: %3px; "
+	                        "border-bottom-right-radius: %4px; } "
+	                        "QCheckBox::indicator { width: 0px; height: 0px; } ")
+	                    .arg(tl)
+	                    .arg(bl)
+	                    .arg(tr)
+	                    .arg(br);
+	style += "QCheckBox:hover { background-color: #767676; }";
+	style += "QCheckBox:checked { background-color: #009ee8; }";
+	style += "QCheckBox:checked:hover { background-color: #00b0ff; }";
+	style += "QCheckBox:disabled { background-color: #636363; color: #cfcfcf; }";
+	cb->setStyleSheet(style);
+
+	cb->setContentsMargins(0, 0, 0, 0);
+	cb->setCursor(Qt::PointingHandCursor);
+	cb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	cb->setMinimumHeight(28);
+
+	// 文字搬进 <objectName>_label 子标签（沿用复选框的文字容器约定）
+	auto* label = new QLabel(cb->text(), cb);
+	label->setObjectName(cb->objectName() + QStringLiteral("_label"));
+	label->setAlignment(Qt::AlignCenter);
+	label->setAttribute(Qt::WA_TransparentForMouseEvents);
+	label->setStyleSheet("color: #ffffff; background-color: transparent; ");
+	cb->setText(QString());
+
+	auto* lay = new QHBoxLayout(cb);
+	lay->setContentsMargins(0, 0, 0, 0);
+	lay->addWidget(label, 0, Qt::AlignCenter);
+
+	cb->installEventFilter(new SegmentWatcher(label, cb));
+}
 } // namespace
 
 /**
@@ -347,4 +470,97 @@ void CarbonUIQCheckBox::applyStyle(QCheckBox* cb, CheckIndicatorPosition positio
 	QObject::connect(cb, &QAbstractButton::toggled, cb, setIndicatorStyle);
 
 	cb->installEventFilter(new HoverWatcher(indicator, cb));
+}
+
+/**
+ * @brief 构造按钮组并装配分段（契约见 CarbonUIQCheckBox.h）。
+ *
+ * @details
+ * 每段一个独立勾选的 QCheckBox，外形由位置决定：首段左两角 10px 圆角、
+ * 末段右两角 10px 圆角、中段直角；布局水平间距固定 2px 形成分段缝隙。
+ * 全部分段加入一个 exclusive 的 QButtonGroup（以本组为父对象）实现互斥：
+ * 点击未选中段选中它并取消其余段，点击已选中段不变；默认选中首段，
+ * 构造完成后组内始终有且仅有一个选中项。
+ * 组内未设 objectName 时使用默认名，分段与文字标签按组名派生命名。
+ *
+ * @param[in] segmentCount 分段数量，小于 1 按 1 处理。
+ * @param[in] parent       父控件指针，**可为 NULL**。
+ */
+CarbonUIQCheckButtonGroup::CarbonUIQCheckButtonGroup(int segmentCount, QWidget* parent)
+    : QWidget(parent) {
+	if (segmentCount < 1) {
+		segmentCount = 1;
+	}
+	if (objectName().isEmpty()) {
+		setObjectName(QStringLiteral("carbonUICheckButtonGroup"));
+	}
+
+	auto* lay = new QHBoxLayout(this);
+	lay->setContentsMargins(0, 0, 0, 0);
+	lay->setSpacing(2);
+
+	auto* exclusiveGroup = new QButtonGroup(this);
+	exclusiveGroup->setExclusive(true);
+
+	for (int i = 0; i < segmentCount; ++i) {
+		auto* cb = new QCheckBox(this);
+		cb->setObjectName(objectName() + QStringLiteral("_segment%1").arg(i));
+		// 分段外形与 CarbonUIQPushButton 同约定：首段左圆、末段右圆、中段直角
+		int tl = 0;
+		int tr = 0;
+		int br = 0;
+		int bl = 0;
+		if (segmentCount == 1) {
+			tl = tr = br = bl = 10;
+		} else if (i == 0) {
+			tl = bl = 10;
+		} else if (i == segmentCount - 1) {
+			tr = br = 10;
+		}
+		applyCheckStyleSegment(cb, tl, tr, br, bl);
+		exclusiveGroup->addButton(cb);
+		lay->addWidget(cb, 1);
+		m_segments.append(cb);
+	}
+
+	// 默认选中首段：互斥语义下点击已选中段不会取消自己，
+	// 因此构造完成后组内始终有且仅有一个选中项。
+	m_segments.first()->setChecked(true);
+}
+
+/**
+ * @brief 统一命名按钮组及其全部分段与文字标签（契约见 CarbonUIQCheckBox.h）。
+ *
+ * @param[in] name 组 objectName；分段命名为 `<name>_segment<i>`，分段内的
+ *                 文字标签随分段改名为 `<分段名>_label`。
+ */
+void CarbonUIQCheckButtonGroup::setGroupObjectName(const QString& name) {
+	setObjectName(name);
+	for (int i = 0; i < m_segments.size(); ++i) {
+		auto* cb = m_segments.at(i);
+		auto* label =
+		    cb->findChild<QLabel*>(cb->objectName() + QStringLiteral("_label"),
+		                           Qt::FindDirectChildrenOnly);
+		cb->setObjectName(name + QStringLiteral("_segment%1").arg(i));
+		if (label != nullptr) {
+			label->setObjectName(cb->objectName() + QStringLiteral("_label"));
+		}
+	}
+}
+
+/**
+ * @brief 查询分段数量（详见 CarbonUIQCheckBox.h）。
+ */
+int CarbonUIQCheckButtonGroup::segmentCount() const {
+	return m_segments.size();
+}
+
+/**
+ * @brief 按序号取分段复选框（详见 CarbonUIQCheckBox.h）。
+ */
+QCheckBox* CarbonUIQCheckButtonGroup::segment(int index) const {
+	if (index < 0 || index >= m_segments.size()) {
+		return nullptr;
+	}
+	return m_segments.at(index);
 }
