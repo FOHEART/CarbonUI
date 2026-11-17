@@ -141,10 +141,12 @@ class ColorAreaWidget : public QWidget {
 		update();
 	}
 
-	/// @brief 当前色相 [0, 1]。
+	/// @brief 当前色相。
+	/// @return 色相值 [0, 1]。
 	double hue() const { return hue_; }
 
-	/// @brief 当前饱和度 [0, 1]。
+	/// @brief 当前饱和度。
+	/// @return 饱和度值 [0, 1]。
 	double sat() const { return sat_; }
 
   protected:
@@ -228,7 +230,8 @@ class ValueSliderWidget : public QWidget {
 		update();
 	}
 
-	/// @brief 当前明度 [0, 1]。
+	/// @brief 当前明度。
+	/// @return 明度值 [0, 1]。
 	double value() const { return val_; }
 
   protected:
