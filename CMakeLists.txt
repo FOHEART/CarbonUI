@@ -71,6 +71,7 @@ set(PROJECT_HEADERS
     include/CarbonUIQStatusBar.h
     include/CarbonUIQTreeWidget.h
     include/CarbonUIQTreeView.h
+    include/CarbonUIWidgetWithHdrBtn.h
     include/groupboxcollapser.h
 )
 
@@ -90,6 +91,7 @@ set(PROJECT_SOURCES
     src/CarbonUIQTreeWidget.cpp
     src/CarbonUIQTreeView.cpp
     src/CarbonUIDialog.cpp
+    src/CarbonUIWidgetWithHdrBtn.cpp
     src/groupboxcollapser.cpp
 )
 
