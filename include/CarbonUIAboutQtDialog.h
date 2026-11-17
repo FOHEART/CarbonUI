@@ -17,7 +17,7 @@
  * 无系统边框、9px 圆角深色面板，顶部 46px 纯黑标题条（左侧白色加粗大写
  * 标题 "ABOUT QT"、右侧关闭按钮），正文区依次为 Qt 徽标 + "About Qt" 标题行
  * 与富文本说明段落（含可点击的 download.qt.io / qt.io 超链接）。配色与结构
- * 契约同 CarbonUIDialog（标题条 #0f0f0f、正文 #212121、文字 #cdcdcd），
+ * 契约同 CarbonUIDialog（标题条 \#0f0f0f、正文 \#212121、文字 \#cdcdcd），
  * 但正文是富文本而非键值行，因此不复用 CarbonUIDialog 而是独立装配。
  *
  * Qt 徽标（绿色圆角方块 + 白色 "Qt" 字样）在构造时用 QPainter 程序化绘制，
