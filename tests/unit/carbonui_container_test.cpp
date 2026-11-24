@@ -19,6 +19,7 @@
 #include <QtWidgets/QComboBox>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QScrollArea>
@@ -35,6 +36,7 @@
 #include "CarbonUIQScrollArea.h"
 #include "CarbonUIQStatusBar.h"
 #include "CarbonUIQTabWidget.h"
+#include "CarbonUIQTitleBar.h"
 #include "CarbonUIQToolBar.h"
 #include "qt_test_support.h"
 
@@ -80,6 +82,93 @@ TEST(MenuBarStyle, UsesInWindowBarWithBoldTenPointFont)
     EXPECT_TRUE(bar.font().bold());
     EXPECT_QSS_CONTAINS(bar.styleSheet(), "QMenuBar { background: #3b3b3b;");
     EXPECT_QSS_CONTAINS(bar.styleSheet(), "QMenu::item:selected");
+}
+
+TEST(MenuBarStyle, ApplyMenuStyleDarkensPopupsOutsideTheBar)
+{
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQMenuBar::applyMenuStyle(nullptr));
+
+    QMenu menu;
+
+    CarbonUIQMenuBar::applyMenuStyle(&menu);
+
+    EXPECT_EQ(menu.font().pointSize(), 10);
+    EXPECT_TRUE(menu.font().bold());
+    EXPECT_QSS_CONTAINS(menu.styleSheet(), "QMenu { background: #2e2e2e;");
+    EXPECT_QSS_CONTAINS(menu.styleSheet(), "QMenu::item:selected { background: #3b3b3b;");
+}
+
+TEST(MenuBarStyle, AdoptExistingMenusMigratesActionsAndDarkensPopups)
+{
+    QMainWindow window;
+    auto* oldBar = window.menuBar();
+    oldBar->setObjectName("designerMenuBar");
+    auto* fileMenu = oldBar->addMenu("File");
+    auto* helpMenu = oldBar->addMenu("Help");
+
+    QMenuBar* newBar = CarbonUIQMenuBar::adoptExistingMenus(&window);
+
+    ASSERT_NE(newBar, nullptr);
+    EXPECT_NE(newBar, oldBar);
+    EXPECT_EQ(newBar->objectName(), QStringLiteral("designerMenuBar"));
+    ASSERT_EQ(newBar->actions().size(), 2);
+    EXPECT_EQ(newBar->actions().at(0)->menu(), fileMenu);
+    EXPECT_EQ(newBar->actions().at(1)->menu(), helpMenu);
+    // 菜单被重新挂到 window 下后已不在旧栏样式表作用域内，必须单独刷外观。
+    EXPECT_QSS_CONTAINS(fileMenu->styleSheet(), "QMenu { background: #2e2e2e;");
+    EXPECT_QSS_CONTAINS(helpMenu->styleSheet(), "QMenu { background: #2e2e2e;");
+    EXPECT_EQ(CarbonUIQMenuBar::adoptExistingMenus(nullptr), nullptr);
+}
+
+TEST(TitleBarStyle, FixesTwentySixPixelBarWithWindowButtons)
+{
+    QWidget window;
+    CarbonUIQTitleBar bar(&window);
+
+    EXPECT_EQ(bar.height(), 26);
+    EXPECT_EQ(bar.objectName(), QStringLiteral("CarbonUIQTitleBar"));
+    EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarMinimize"), nullptr);
+    EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarMaximize"), nullptr);
+    EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarClose"), nullptr);
+    EXPECT_QSS_CONTAINS(bar.styleSheet(), "border-top-left-radius: 0px;");
+}
+
+TEST(TitleBarStyle, CornerRadiusAndTitleFollowTheWindow)
+{
+    QWidget window;
+    window.setWindowTitle("MotionGlove");
+    CarbonUIQTitleBar bar(&window);
+
+    bar.setCornerRadius(9);
+    EXPECT_QSS_CONTAINS(bar.styleSheet(), "border-top-left-radius: 9px;");
+    // 标题文字自动跟随窗口标题
+    EXPECT_EQ(bar.titleText(), QStringLiteral("MotionGlove"));
+    bar.setTitleText("Manual");
+    EXPECT_EQ(bar.titleText(), QStringLiteral("Manual"));
+
+    bar.setLogoPixmap(QPixmap());
+    QLabel* logo = bar.findChild<QLabel*>("CarbonUIQTitleBarLogo");
+    ASSERT_NE(logo, nullptr);
+    EXPECT_TRUE(logo->pixmap() == nullptr || logo->pixmap()->isNull());
+}
+
+TEST(TitleBarStyle, MaximizedWindowZeroesRadiusAndSwapsGlyph)
+{
+    QWidget window;
+    CarbonUIQTitleBar bar(&window);
+    bar.setCornerRadius(9);
+
+    window.setWindowState(Qt::WindowMaximized);
+    bar.syncToWindowState();
+
+    EXPECT_QSS_CONTAINS(bar.styleSheet(), "border-top-left-radius: 0px;");
+    QPushButton* maximize = bar.findChild<QPushButton*>("CarbonUIQTitleBarMaximize");
+    ASSERT_NE(maximize, nullptr);
+    EXPECT_EQ(maximize->text(), QString::fromUtf8("\xE2\x9D\x90"));
+
+    window.setWindowState(Qt::WindowNoState);
+    bar.syncToWindowState();
+    EXPECT_QSS_CONTAINS(bar.styleSheet(), "border-top-left-radius: 9px;");
 }
 
 TEST(ToolBarStyle, NullWidgetIsIgnored)

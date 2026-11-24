@@ -66,6 +66,7 @@ set(PROJECT_HEADERS
     include/CarbonUIQScrollArea.h
     include/CarbonUIQScrollBar.h
     include/CarbonUIQMenuBar.h
+    include/CarbonUIQTitleBar.h
     include/CarbonUIQToolBar.h
     include/CarbonUIQTabWidget.h
     include/CarbonUIQComboBox.h
@@ -88,6 +89,7 @@ set(PROJECT_SOURCES
     src/containers/CarbonUIQScrollArea.cpp
     src/containers/CarbonUIQScrollBar.cpp
     src/frame/CarbonUIQMenuBar.cpp
+    src/frame/CarbonUIQTitleBar.cpp
     src/frame/CarbonUIQToolBar.cpp
     src/containers/CarbonUIQTabWidget.cpp
     src/inputs/CarbonUIQComboBox.cpp
