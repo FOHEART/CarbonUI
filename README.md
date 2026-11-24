@@ -14,6 +14,7 @@ Lightweight Qt Widgets UI helpers library
 - `CarbonUIWindowCorners` — frameless-window rounded-corner helper: Windows 11 DWM system corners (antialiased, default 1 px border line removed) with a `setMask`/paint fallback for older systems
 - `CarbonUIProcessStats` — headless process CPU % / resident memory + system available memory sampling, conversions and status-bar text formatters (pure logic, unit-testable)
 - `CarbonUIUsageStatusBar` — permanent-widget for `QMainWindow::statusBar()`: status message on the left plus a single rotating readout (CPU → process memory → available memory, 2 s per item, 1 s sampling) with built-in zh/en text mapping driven by a `setLanguage()` slot
+- `CarbonUISystemInfo` + `CarbonUISystemInfoDialog` — headless system info collection (OS / CPU / memory / GPU / storage, pure logic) and a `CarbonUIDialog`-shelled dialog rendering it, with the same built-in zh/en `setLanguage()` interface
 - Dark carbon theme with consistent palette (`#0d0d0d` window, `#cdcdcd`/`#ffffff` text, `#2d2d2d`/`#333333` control backgrounds, `#0078d4`-family accents)
 - `carbonui_cli` — headless widget screenshot / QSS export CLI for Agents and CI
 

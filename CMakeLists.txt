@@ -74,6 +74,8 @@ set(PROJECT_HEADERS
     include/CarbonUIQComboBox.h
     include/CarbonUIColorPickWidget.h
     include/CarbonUIQStatusBar.h
+    include/CarbonUISystemInfo.h
+    include/CarbonUISystemInfoDialog.h
     include/CarbonUIUsageStatusBar.h
     include/CarbonUIQTreeWidget.h
     include/CarbonUIQTreeView.h
@@ -86,6 +88,7 @@ set(PROJECT_HEADERS
 set(PROJECT_SOURCES
     src/core/CarbonUIClass.cpp
     src/core/CarbonUIProcessStats.cpp
+    src/core/CarbonUISystemInfo.cpp
     src/frame/CarbonUIWindowCorners.cpp
     src/buttons/CarbonUIQPushButton.cpp
     src/buttons/CarbonUIQRadioButton.cpp
@@ -105,6 +108,7 @@ set(PROJECT_SOURCES
     src/views/CarbonUIQTreeView.cpp
     src/dialogs/CarbonUIAboutQtDialog.cpp
     src/dialogs/CarbonUIDialog.cpp
+    src/dialogs/CarbonUISystemInfoDialog.cpp
     src/containers/CarbonUIWidgetWithHdrBtn.cpp
     src/containers/groupboxcollapser.cpp
 )
@@ -155,6 +159,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 # 静态库构建下该依赖会传递给消费方，动态库自身链接，均由本行覆盖。
 if(WIN32)
   target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi)
+  # CarbonUISystemInfo 的显卡枚举（SetupAPI / cfgmgr32）与 ole32。
+  target_link_libraries(${PROJECT_NAME} PRIVATE setupapi cfgmgr32 ole32)
 endif()
 
 # Windows DLL 版本属性：configure 填充 version.rc.in（FileVersion/ProductVersion），

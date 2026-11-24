@@ -94,6 +94,7 @@ add_executable(carbonui_tests
     unit/groupboxcollapser_test.cpp
     unit/carbonui_process_stats_test.cpp
     unit/carbonui_usage_statusbar_test.cpp
+    unit/carbonui_system_info_test.cpp
     unit/carbonui_cli_smoke_test.cpp
 )
 carbonui_configure_test_target(carbonui_tests "Unit." offscreen)
