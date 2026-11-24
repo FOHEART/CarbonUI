@@ -57,6 +57,7 @@ set(PROJECT_HEADERS
     include/carbonui_global.h
     include/CarbonUIVersion.h
     include/CarbonUIClass.h
+    include/CarbonUIProcessStats.h
     include/CarbonUIWindowCorners.h
     include/CarbonUIAboutQtDialog.h
     include/CarbonUIDialog.h
@@ -73,6 +74,7 @@ set(PROJECT_HEADERS
     include/CarbonUIQComboBox.h
     include/CarbonUIColorPickWidget.h
     include/CarbonUIQStatusBar.h
+    include/CarbonUIUsageStatusBar.h
     include/CarbonUIQTreeWidget.h
     include/CarbonUIQTreeView.h
     include/CarbonUIWidgetWithHdrBtn.h
@@ -83,6 +85,7 @@ set(PROJECT_HEADERS
 # frame=菜单栏工具栏状态栏 / containers=容器与滚动 / views=项视图 / dialogs=对话框
 set(PROJECT_SOURCES
     src/core/CarbonUIClass.cpp
+    src/core/CarbonUIProcessStats.cpp
     src/frame/CarbonUIWindowCorners.cpp
     src/buttons/CarbonUIQPushButton.cpp
     src/buttons/CarbonUIQRadioButton.cpp
@@ -97,6 +100,7 @@ set(PROJECT_SOURCES
     src/inputs/CarbonUIQComboBox.cpp
     src/inputs/CarbonUIColorPickWidget.cpp
     src/frame/CarbonUIQStatusBar.cpp
+    src/frame/CarbonUIUsageStatusBar.cpp
     src/views/CarbonUIQTreeWidget.cpp
     src/views/CarbonUIQTreeView.cpp
     src/dialogs/CarbonUIAboutQtDialog.cpp

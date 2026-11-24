@@ -11,6 +11,9 @@ Lightweight Qt Widgets UI helpers library
 - Self-styling widget classes (one class per widget, `CarbonUI` + the Qt type name): `CarbonUIQPushButton` (round/left/rect/right shapes for segmented toolbars), `CarbonUIQRadioButton` (four-corner/left/right/rect shapes + centered child label), `CarbonUIQCheckBox` (self-drawn indicator), `CarbonUIQLineEdit` (centered, select-all-on-focus, C-locale validator), `CarbonUIQScrollArea`, `CarbonUIQScrollBar` (8 px hit area painting a 4 px bar in normal state and the full 8 px on hover, for vertical and horizontal scrollbars alike), `CarbonUIQMenuBar`, `CarbonUIQToolBar`, `CarbonUIQTabWidget`, `CarbonUIQComboBox`, `CarbonUIQStatusBar`, `CarbonUIQTreeWidget`, `CarbonUIQTreeView`; each constructor applies its own style, and the static `applyStyle()` restyles an existing widget of the same Qt type
 - `CarbonUIClass` — global helpers only: a `QToolTip` app-wide rule and recursive label recolouring
 - `QGroupBoxCollapser` — turns any `QGroupBox` into an animated collapsible panel (title becomes a checkable tool button, body collapses with a 180 ms `maximumHeight` animation)
+- `CarbonUIWindowCorners` — frameless-window rounded-corner helper: Windows 11 DWM system corners (antialiased, default 1 px border line removed) with a `setMask`/paint fallback for older systems
+- `CarbonUIProcessStats` — headless process CPU % / resident memory + system available memory sampling, conversions and status-bar text formatters (pure logic, unit-testable)
+- `CarbonUIUsageStatusBar` — permanent-widget for `QMainWindow::statusBar()`: status message on the left plus a single rotating readout (CPU → process memory → available memory, 2 s per item, 1 s sampling) with built-in zh/en text mapping driven by a `setLanguage()` slot
 - Dark carbon theme with consistent palette (`#0d0d0d` window, `#cdcdcd`/`#ffffff` text, `#2d2d2d`/`#333333` control backgrounds, `#0078d4`-family accents)
 - `carbonui_cli` — headless widget screenshot / QSS export CLI for Agents and CI
 
@@ -113,6 +116,9 @@ Include headers with:
 #include <CarbonUIQPushButton.h>  // one header per widget class
 #include <CarbonUIQRadioButton.h>
 #include <CarbonUIClass.h>       // global helpers (QToolTip, recursive labels)
+#include <CarbonUIWindowCorners.h>  // frameless window rounded corners
+#include <CarbonUIProcessStats.h>   // process/system usage stats (pure logic)
+#include <CarbonUIUsageStatusBar.h> // status bar usage-cycling widget
 #include <groupboxcollapser.h>   // QGroupBoxCollapser
 #include <CarbonUIVersion.h>     // CARBONUI_VERSION_* macros
 #include <carbonui_global.h>     // export/import macros
