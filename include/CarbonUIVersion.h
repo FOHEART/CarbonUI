@@ -38,7 +38,7 @@
 /// 次版本号（语义化版本第 2 位）。
 #define CARBONUI_VERSION_MINOR 4
 /// 修订号（语义化版本第 3 位）。
-#define CARBONUI_VERSION_PATCH 0
+#define CARBONUI_VERSION_PATCH 1
 
 /**
  * 版本号字符串形式（如 "0.2.1"）。
@@ -46,7 +46,7 @@
  * @note 这是脚本（package/release/gen_docs）与资源文件解析的锚点行，
  *       必须保持 `#define CARBONUI_VERSION "x.y.z"` 的固定格式。
  */
-#define CARBONUI_VERSION "0.4.0"
+#define CARBONUI_VERSION "0.4.1"
 
 /// git tag / GitHub Release 形式（如 "v0.2.1"）。
 #define CARBONUI_VERSION_TAG "v" CARBONUI_VERSION

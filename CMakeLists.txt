@@ -57,6 +57,7 @@ set(PROJECT_HEADERS
     include/carbonui_global.h
     include/CarbonUIVersion.h
     include/CarbonUIClass.h
+    include/CarbonUIWindowCorners.h
     include/CarbonUIAboutQtDialog.h
     include/CarbonUIDialog.h
     include/CarbonUIQPushButton.h
@@ -82,6 +83,7 @@ set(PROJECT_HEADERS
 # frame=菜单栏工具栏状态栏 / containers=容器与滚动 / views=项视图 / dialogs=对话框
 set(PROJECT_SOURCES
     src/core/CarbonUIClass.cpp
+    src/frame/CarbonUIWindowCorners.cpp
     src/buttons/CarbonUIQPushButton.cpp
     src/buttons/CarbonUIQRadioButton.cpp
     src/buttons/CarbonUIQCheckBox.cpp
@@ -144,6 +146,12 @@ else()
     ${MOC_SOURCES} ${UIC_SOURCES} ${RCC_SOURCES})
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
+
+# CarbonUIWindowCorners 的 DWM 系统圆角路径（Windows 11+）需要 dwmapi；
+# 静态库构建下该依赖会传递给消费方，动态库自身链接，均由本行覆盖。
+if(WIN32)
+  target_link_libraries(${PROJECT_NAME} PRIVATE dwmapi)
+endif()
 
 # Windows DLL 版本属性：configure 填充 version.rc.in（FileVersion/ProductVersion），
 # 编译进 dll 的资源段，资源管理器可见。仅动态库需要，静态库无此产物。
