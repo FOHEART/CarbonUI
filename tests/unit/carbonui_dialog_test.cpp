@@ -57,6 +57,18 @@ TEST(CarbonUIDialogTest, ExposesTitleAndCloseButton)
     EXPECT_FALSE(close->text().isEmpty()) << "close button must show a glyph";
 }
 
+TEST(CarbonUIDialogTest, WindowButtonHoverUsesTheSharedVisibleColor)
+{
+    CarbonUIDialog dialog(QStringLiteral("ABOUT"));
+
+    // 悬停底色必须明显亮于标题条底色 #0f0f0f（#2a2a2a 对比过弱，历史坑），
+    // 且与 CarbonUIQTitleBar 共用同一常量（见 src/CarbonUIWindowButtonStyle.h）。
+    auto* close = dialog.findChild<QPushButton*>(QStringLiteral("CarbonUIDialogClose"));
+    ASSERT_NE(close, nullptr);
+    EXPECT_TRUE(close->styleSheet().contains(QStringLiteral(":hover { background-color: #3a3a3a;")))
+        << "hover must use the shared visible color from CarbonUIWindowButtonStyle.h";
+}
+
 TEST(CarbonUIDialogTest, TitleTextCanBeUpdated)
 {
     CarbonUIDialog dialog(QStringLiteral("ABOUT"));

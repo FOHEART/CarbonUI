@@ -20,6 +20,7 @@
  */
 
 #include "CarbonUIQMenuBar.h"
+#include <QtCore/QSet>
 #include <QtGui/QFont>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QMainWindow>
@@ -139,4 +140,57 @@ QMenuBar* CarbonUIQMenuBar::adoptExistingMenus(QMainWindow* window) {
 		applyMenuStyle(rescuedMenu);
 	}
 	return newBar;
+}
+
+/**
+ * @brief 递归统一一棵菜单子树内全部菜单与菜单项的字体。
+ */
+namespace {
+
+void unifyMenuSubtreeFonts(QMenu* menu, const QFont& font, QSet<QMenu*>& visited) {
+	if (menu == nullptr || visited.contains(menu)) {
+		return;
+	}
+	visited.insert(menu);
+	menu->setFont(font);
+
+	QList<QMenu*> submenus;
+	const QList<QAction*> actions = menu->actions();
+	for (QAction* action : actions) {
+		action->setFont(font);
+		// 动态子菜单可能以主窗口为父（如 insertMenu 挂入的「视图」），只能通过
+		// action 到达，不能只靠 findChildren 沿 Qt 父子链查找。
+		if (auto* submenu = action->menu()) {
+			submenus.append(submenu);
+		}
+	}
+	const QList<QMenu*> childMenus =
+	    menu->findChildren<QMenu*>(QString(), Qt::FindDirectChildrenOnly);
+	for (QMenu* child : childMenus) {
+		if (!submenus.contains(child)) {
+			submenus.append(child);
+		}
+	}
+	for (QMenu* submenu : submenus) {
+		unifyMenuSubtreeFonts(submenu, font, visited);
+	}
+}
+
+} // namespace
+
+/**
+ * @brief 统一栏上全部主菜单 / 子菜单与菜单项的字体（详见 CarbonUIQMenuBar.h）。
+ */
+void CarbonUIQMenuBar::unifyFonts(QMenuBar* bar) {
+	if (bar == nullptr) {
+		return;
+	}
+
+	const QFont font = bar->font();
+	QSet<QMenu*> visited;
+	const QList<QAction*> actions = bar->actions();
+	for (QAction* action : actions) {
+		action->setFont(font);
+		unifyMenuSubtreeFonts(action->menu(), font, visited);
+	}
 }

@@ -24,6 +24,7 @@
 
 #include "CarbonUIDialog.h"
 
+#include "../CarbonUIWindowButtonStyle.h"
 #include <QtCore/QEvent>
 #include <QtGui/QFont>
 #include <QtGui/QMouseEvent>
@@ -58,21 +59,17 @@ QString frameStyle(int radius)
         .arg(radius);
 }
 
-/// 标题条 QSS：纯黑底 + 上两角圆角（下两角保持直角以贴合正文）。
+/// 标题条 QSS：转发到库内共享实现（与 CarbonUIQTitleBar 同源，见
+/// src/CarbonUIWindowButtonStyle.h）。
 QString headerStyle(int radius)
 {
-    return QStringLiteral("QWidget#CarbonUIDialogHeader { background-color: #0f0f0f;"
-                          " border-top-left-radius: %1px; border-top-right-radius: %1px; }")
-        .arg(radius);
+    return CarbonUIWindowChrome::headerStyle(QStringLiteral("CarbonUIDialogHeader"), radius);
 }
 
-/// 窗口按钮（最小化 / 最大化 / 关闭）QSS：透明底白字，悬停淡灰底。
+/// 窗口按钮（最小化 / 最大化 / 关闭）QSS：转发到库内共享实现。
 QString windowButtonStyle(const QString& objectName)
 {
-    return QStringLiteral("QPushButton#%1 { background-color: transparent; color: #ffffff;"
-                          " border: none; padding: 0px; }"
-                          "QPushButton#%1:hover { background-color: #2a2a2a; border-radius: 6px; }")
-        .arg(objectName);
+    return CarbonUIWindowChrome::windowButtonStyle(objectName);
 }
 
 /// 创建标题条窗口按钮：统一命名、样式、尺寸与鼠标形状。

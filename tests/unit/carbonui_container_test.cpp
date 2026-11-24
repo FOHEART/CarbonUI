@@ -120,6 +120,39 @@ TEST(MenuBarStyle, AdoptExistingMenusMigratesActionsAndDarkensPopups)
     EXPECT_EQ(CarbonUIQMenuBar::adoptExistingMenus(nullptr), nullptr);
 }
 
+TEST(MenuBarStyle, UnifyFontsCoversNestedSubmenusAndItems)
+{
+    QMainWindow window;
+    QMenuBar* bar = window.menuBar();
+    CarbonUIQMenuBar::applyStyle(bar);
+    const QFont barFont = bar->font();
+
+    // 模拟 .ui 混设字号：子菜单显式 14pt、菜单项显式 12pt；动态菜单不设字体。
+    QMenu* top = bar->addMenu("Top");
+    top->addAction("Item");
+    QMenu* sub = top->addMenu("Sub");
+    sub->addAction("SubItem");
+    QFont odd; odd.setPointSize(14); sub->setFont(odd);
+    QFont oddItem; oddItem.setPointSize(12); top->actions().at(0)->setFont(oddItem);
+    // 动态菜单以窗口为父、仅通过 action 可达（主程序「视图」子菜单的场景）。
+    auto* detached = new QMenu("Detached", &window);
+    detached->addAction("DetachedItem");
+    top->insertMenu(top->actions().at(0), detached);
+
+    CarbonUIQMenuBar::unifyFonts(bar);
+
+    EXPECT_EQ(top->font().pointSize(), barFont.pointSize());
+    EXPECT_TRUE(top->font().bold());
+    // 子菜单与菜单项都被显式覆盖，不依赖 Qt 的父到子字体传播。
+    EXPECT_EQ(sub->font().pointSize(), barFont.pointSize());
+    EXPECT_TRUE(sub->font().bold());
+    EXPECT_EQ(top->actions().at(0)->font().pointSize(), barFont.pointSize());
+    EXPECT_EQ(sub->actions().at(0)->font().pointSize(), barFont.pointSize());
+    EXPECT_EQ(detached->font().pointSize(), barFont.pointSize());
+    EXPECT_EQ(detached->actions().at(0)->font().pointSize(), barFont.pointSize());
+    EXPECT_NO_FATAL_FAILURE(CarbonUIQMenuBar::unifyFonts(nullptr));
+}
+
 TEST(TitleBarStyle, FixesTwentySixPixelBarWithWindowButtons)
 {
     QWidget window;
@@ -127,6 +160,9 @@ TEST(TitleBarStyle, FixesTwentySixPixelBarWithWindowButtons)
 
     EXPECT_EQ(bar.height(), 26);
     EXPECT_EQ(bar.objectName(), QStringLiteral("CarbonUIQTitleBar"));
+    // QWidget 子类必须开 WA_StyledBackground，否则 QSS 的 #0f0f0f 标题条底色
+    // 不会绘制，透出宿主的 #212121，窗口按钮悬停反馈会几乎看不见。
+    EXPECT_TRUE(bar.testAttribute(Qt::WA_StyledBackground));
     EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarMinimize"), nullptr);
     EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarMaximize"), nullptr);
     EXPECT_NE(bar.findChild<QPushButton*>("CarbonUIQTitleBarClose"), nullptr);
@@ -169,6 +205,18 @@ TEST(TitleBarStyle, MaximizedWindowZeroesRadiusAndSwapsGlyph)
     window.setWindowState(Qt::WindowNoState);
     bar.syncToWindowState();
     EXPECT_QSS_CONTAINS(bar.styleSheet(), "border-top-left-radius: 9px;");
+}
+
+TEST(TitleBarStyle, WindowButtonHoverUsesTheSharedVisibleColor)
+{
+    QWidget window;
+    CarbonUIQTitleBar bar(&window);
+
+    // 悬停底色必须明显亮于标题条底色 #0f0f0f（#2a2a2a 对比过弱，历史坑），
+    // 且与 CarbonUIDialog 共用同一常量（见 src/CarbonUIWindowButtonStyle.h）。
+    QPushButton* close = bar.findChild<QPushButton*>("CarbonUIQTitleBarClose");
+    ASSERT_NE(close, nullptr);
+    EXPECT_QSS_CONTAINS(close->styleSheet(), ":hover { background-color: #3a3a3a;");
 }
 
 TEST(ToolBarStyle, NullWidgetIsIgnored)

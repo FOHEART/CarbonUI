@@ -87,6 +87,24 @@ class CARBONUI_DLL_API CarbonUIQMenuBar : public QMenuBar {
 	 * @return 装配好的新菜单栏（已应用 CarbonUI 外观），挂在 @p window 下。
 	 */
 	static QMenuBar* adoptExistingMenus(QMainWindow* window);
+
+	/**
+	 * @brief 以菜单栏字体为唯一真相源，统一栏上全部主菜单 / 子菜单与菜单项的字体。
+	 *
+	 * @details 从 @p bar 的 action 递归可达的每一个 QMenu 都显式覆盖为菜单栏
+	 * 同款字体（10pt 加粗）：菜单对象与它包含的每个菜单项 action 一并设置。
+	 * 这样做是因为 Qt Designer 常在 .ui 里混设字号（如菜单 11pt / 菜单项
+	 * 10pt），而 QMenu 的显式字体挡住 Qt 的父到子字体传播，动态创建（无显式
+	 * 字体）的子菜单又只继承到应用默认字体——两路混排导致菜单字号不一。
+	 * 收集走「action → menu → 子菜单」递归而不是 bar->findChildren()：
+	 * 被 adoptExistingMenus() 救出的顶层菜单挂在主窗口下、不在菜单栏子树内；
+	 * 动态 insertMenu() 挂入的子菜单也常以主窗口为父，因此同时按 action
+	 * 与直接子控件两条路径收集，带 visited 去重防环。
+	 *
+	 * @param[in,out] bar 目标菜单栏，**可为 NULL**，为 NULL 时直接返回。
+	 * @note 在全部菜单创建完成后调用一次即可（运行期后建的子菜单需再调一次）。
+	 */
+	static void unifyFonts(QMenuBar* bar);
 };
 
 #endif // CARBONUIQMENUBAR_H

@@ -24,6 +24,7 @@
 
 #include "CarbonUIQTitleBar.h"
 
+#include "../CarbonUIWindowButtonStyle.h"
 #include <QtCore/QEvent>
 #include <QtGui/QFont>
 #include <QtGui/QMouseEvent>
@@ -49,21 +50,17 @@ const char* const kRestoreGlyph = "\xE2\x9D\x90";
 /// 关闭按钮字形（U+2715 MULTIPLICATION X）。
 const char* const kCloseGlyph = "\xE2\x9C\x95";
 
-/// 标题条 QSS：纯黑底 + 上两角圆角；最大化时圆角传 0。
+/// 标题条 QSS：转发到库内共享实现（与 CarbonUIDialog 同源，见
+/// src/CarbonUIWindowButtonStyle.h）；最大化时圆角传 0。
 QString titleBarStyle(int radius)
 {
-	return QStringLiteral("QWidget#CarbonUIQTitleBar { background-color: #0f0f0f;"
-	                      " border-top-left-radius: %1px; border-top-right-radius: %1px; }")
-	    .arg(radius);
+	return CarbonUIWindowChrome::headerStyle(QStringLiteral("CarbonUIQTitleBar"), radius);
 }
 
-/// 标题条窗口按钮 QSS：透明底白字，悬停淡灰底。
+/// 标题条窗口按钮 QSS：转发到库内共享实现。
 QString windowButtonStyle(const QString& objectName)
 {
-	return QStringLiteral("QPushButton#%1 { background-color: transparent; color: #ffffff;"
-	                      " border: none; padding: 0px; }"
-	                      "QPushButton#%1:hover { background-color: #2a2a2a; border-radius: 6px; }")
-	    .arg(objectName);
+	return CarbonUIWindowChrome::windowButtonStyle(objectName);
 }
 
 /// 创建一枚标题条窗口按钮：统一命名、样式、尺寸与鼠标形状。
@@ -94,6 +91,10 @@ CarbonUIQTitleBar::CarbonUIQTitleBar(QWidget* parent) : QWidget(parent) {
  */
 void CarbonUIQTitleBar::buildUi() {
 	setObjectName(QStringLiteral("CarbonUIQTitleBar"));
+	// QWidget 子类必须显式开启 WA_StyledBackground，QSS 里的 background-color
+	// 才会绘制；否则标题条透出宿主 paintEvent 的 #212121，与 CarbonUIDialog
+	// 的纯黑 #0f0f0f 标题条不一致，窗口按钮悬停色也会显得几乎没有变化。
+	setAttribute(Qt::WA_StyledBackground, true);
 	setFixedHeight(kTitleBarHeight);
 	setStyleSheet(titleBarStyle(m_cornerRadius));
 
