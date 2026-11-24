@@ -101,6 +101,8 @@ quint64 positiveSysConf(int name, quint64 fallback)
 /// @brief 整机可用物理内存（Linux：/proc/meminfo 的 MemAvailable，kB → 字节）。
 /// @details MemAvailable 由内核按「MemFree + 可回收缓存」估算，比裸 MemFree 更
 ///          接近真实可分配量；内核 < 3.14 没有该行，返回失败显示占位符。
+/// @note procfs 文件 stat 大小恒为 0，QFile::atEnd() 在首次读到数据之前恒为
+///       true，不能用 while (!atEnd()) 逐行读；必须 readAll() 后按行拆分。
 bool systemAvailableMemoryBytes(quint64* bytes)
 {
   QFile memInfoFile(QStringLiteral("/proc/meminfo"));
@@ -108,9 +110,9 @@ bool systemAvailableMemoryBytes(quint64* bytes)
   {
     return false;
   }
-  while (!memInfoFile.atEnd())
+  const QList<QByteArray> lines = memInfoFile.readAll().split('\n');
+  for (const QByteArray& line : lines)
   {
-    const QByteArray line = memInfoFile.readLine();
     if (!line.startsWith("MemAvailable:"))
     {
       continue;

@@ -222,15 +222,17 @@ void collectStorageInfo(SystemInfoData& data)
 
 #if !defined(Q_OS_WIN)
 /// @brief CPU 型号（/proc/cpuinfo 的 model name 行）与逻辑核心数。
+/// @note procfs 文件 stat 大小恒为 0，QFile/QTextStream 的 atEnd() 在首次
+///       读到数据之前恒为 true，不能逐行循环读；统一 readAll() 后按行拆分。
 void collectCpuInfo(SystemInfoData& data)
 {
   QFile cpuinfoFile(QStringLiteral("/proc/cpuinfo"));
-  if (cpuinfoFile.open(QIODevice::ReadOnly | QIODevice::Text))
+  if (cpuinfoFile.open(QIODevice::ReadOnly))
   {
-    QTextStream in(&cpuinfoFile);
-    while (!in.atEnd())
+    const QStringList lines =
+        QString::fromLatin1(cpuinfoFile.readAll()).split(QLatin1Char('\n'));
+    for (const QString& line : lines)
     {
-      const QString line = in.readLine();
       if (line.contains(QStringLiteral("model name"), Qt::CaseInsensitive))
       {
         // 行形如 "model name\t: Intel ..."，取冒号后的型号部分。
@@ -251,12 +253,12 @@ void collectCpuInfo(SystemInfoData& data)
 void collectMemoryInfo(SystemInfoData& data)
 {
   QFile memFile(QStringLiteral("/proc/meminfo"));
-  if (memFile.open(QIODevice::ReadOnly | QIODevice::Text))
+  if (memFile.open(QIODevice::ReadOnly))
   {
-    QTextStream in(&memFile);
-    while (!in.atEnd())
+    const QStringList lines =
+        QString::fromLatin1(memFile.readAll()).split(QLatin1Char('\n'));
+    for (const QString& line : lines)
     {
-      const QString line = in.readLine();
       if (line.startsWith(QStringLiteral("MemTotal"), Qt::CaseInsensitive))
       {
         const QStringList parts = line.split(QRegExp("\\s+"));

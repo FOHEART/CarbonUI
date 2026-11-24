@@ -168,6 +168,14 @@ TEST(CarbonUISystemInfo, CollectSystemInfo_RealPlatformSmoke)
   EXPECT_GT(data.totalMemoryGB, 0.0);
   EXPECT_TRUE(data.storageValid);
 #endif
+#if defined(Q_OS_LINUX)
+  // Linux 采集路径回归护栏：/proc/cpuinfo 与 /proc/meminfo 必须解析成功
+  // （CI 曾因 procfs stat size 为 0 导致 atEnd() 首查即真而全部读空）。
+  EXPECT_GT(data.logicalCores, 0);
+  EXPECT_TRUE(data.memoryValid);
+  EXPECT_GT(data.totalMemoryGB, 0.0);
+  EXPECT_FALSE(data.cpuModel.isEmpty());
+#endif
 }
 
 TEST(CarbonUISystemInfoDialog, LanguageSwitch_RebuildsTitleButtonsAndBody)
