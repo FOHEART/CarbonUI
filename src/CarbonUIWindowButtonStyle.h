@@ -33,6 +33,7 @@ namespace CarbonUIWindowChrome {
 /**
  * @brief 标题条窗口按钮 QSS：透明底白字，悬停明显淡灰底圆角。
  * @param[in] objectName 按钮的 objectName（QSS 按 id 选择器限定作用范围）。
+ * @return 可直接 setStyleSheet 的 QSS 文本。
  */
 inline QString windowButtonStyle(const QString& objectName)
 {
@@ -47,6 +48,7 @@ inline QString windowButtonStyle(const QString& objectName)
  * @brief 标题条 QSS：纯黑底 + 上两角圆角（下两角保持直角以贴合正文）。
  * @param[in] objectName 标题条控件的 objectName。
  * @param[in] radius     上两角圆角半径；最大化时传 0。
+ * @return 可直接 setStyleSheet 的 QSS 文本。
  */
 inline QString headerStyle(const QString& objectName, int radius)
 {

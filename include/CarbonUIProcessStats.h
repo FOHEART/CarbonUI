@@ -94,7 +94,7 @@ struct Usage
   double cpuPercent = 0.0;        ///< CPU 占用率，取值 [0, 100]。
   double memoryMb = 0.0;          ///< 进程常驻内存，单位 MB（1024² 字节）。
 
-  bool availableValid = false;     ///< 整机可用内存采集是否成功；独立于 @ref valid。
+  bool availableValid = false;     ///< 整机可用内存采集是否成功；独立于进程指标。
   double availableMemoryMb = 0.0;  ///< 整机可用物理内存，单位 MB（1024² 字节）。
 };
 

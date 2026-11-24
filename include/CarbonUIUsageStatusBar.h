@@ -14,7 +14,7 @@
  *
  * @details
  * 模块边界：QWidget 复合控件，配合 QMainWindow::statusBar()->addPermanentWidget()
- * 使用；进程指标与整机可用内存的采样、换算由 @ref CarbonUIProcessStats 完成，
+ * 使用；进程指标与整机可用内存的采样、换算由 CarbonUIProcessStats 模块完成，
  * 本控件只负责定时采样驱动、轮播切换与按语言格式化显示。
  *
  * 显示形态：左侧为状态消息标签，右侧为读数标签；读数不平铺——CPU 占用 /
@@ -23,7 +23,7 @@
  * 切到哪个项目，哪个项目就用最近一帧采样值。
  *
  * 中英文切换：CarbonUI 不依赖任何翻译器，控件内置 zh / en 文案映射，
- * 宿主把语言切换信号接到 @ref setLanguage(const QString&) 即可（如项目的
+ * 宿主把语言切换信号接到 setLanguage(const QString&) 槽即可（如项目的
  * LanguageManager::languageChanged）；"zh" 开头视为中文，其余一律按英文。
  * 未显式调用时按 QLocale::system() 初始化。
  *
@@ -131,6 +131,7 @@ class CARBONUI_DLL_API CarbonUIUsageStatusBar : public QWidget {
 	void renderUsageLabel();
 
 	/// @brief 组装当前语言的 CarbonUIProcessStats::Labels（标签与占位符）。
+	/// @return 当前语言对应的文案前缀集合副本。
 	CarbonUIProcessStats::Labels currentLabels() const;
 
 	QLabel* m_messageLabel = nullptr;  ///< 左侧状态消息标签。

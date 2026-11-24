@@ -14,12 +14,14 @@
  *
  * @details
  * 适用于「Qt::FramelessWindowHint + 不透明底色」的自绘窗口（如无系统标题栏的
- * 主窗口）。圆角有两条实现路径，由 @ref applyDwmRoundedCorners 的返回值决定：
+ * 主窗口）。圆角有两条实现路径，由 CarbonUIWindowCorners::applyDwmRoundedCorners
+ * 的返回值决定：
  * - Windows 11 及以上：设置 DWM 系统圆角（DWMWCP_ROUND），由窗口合成器做
  *   抗锯齿裁剪，边缘完全平滑；同时移除 DWM 默认在窗口外沿绘制的 1px 边框线
  *   （亮色壁纸下会看到一圈背景色缝隙）。此时宿主窗口不应再调用 setMask。
- * - 旧系统：返回 false，宿主回退到 @ref updateWindowMask（1-bit QRegion 软件裁剪，
- *   圆角处有轻微锯齿）+ @ref paintWindowFrame 自绘圆角描边。
+ * - 旧系统：返回 false，宿主回退到 CarbonUIWindowCorners::updateWindowMask
+ *   （1-bit QRegion 软件裁剪，圆角处有轻微锯齿）+ CarbonUIWindowCorners::
+ *   paintWindowFrame 自绘圆角描边。
  *
  * 与 CarbonUIDialog（WA_TranslucentBackground + QSS border-radius）的关系：
  * 对话框类内容简单的窗口用半透明路径即可获得平滑圆角；但持续动画的 OpenGL
@@ -101,7 +103,7 @@ class CARBONUI_DLL_API CarbonUIWindowCorners {
 	 * @brief 绘制无边框窗口的圆角底色与 1px 边框。
 	 *
 	 * @details 最大化时画直角矩形；否则画圆角矩形——DWM 圆角生效时半径取
-	 *          @ref kDwmCornerRadius（与系统裁剪对齐，防止自绘弧线被裁出豁口），
+	 *          kDwmCornerRadius（与系统裁剪对齐，防止自绘弧线被裁出豁口），
 	 *          软件裁剪时取 @p radius。painter 需由调用方创建，本函数内部
 	 *          开启抗锯齿。等价于宿主 paintEvent 中的整块窗口描边逻辑。
 	 *

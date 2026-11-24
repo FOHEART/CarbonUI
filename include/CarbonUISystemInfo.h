@@ -64,32 +64,34 @@ struct SystemInfoData
 struct Labels
 {
   // 分节标题（渲染时自动加 "=== xxx ===" 包裹）。
-  QString osSection;
-  QString cpuSection;
-  QString memorySection;
-  QString gpuSection;
-  QString storageSection;
+  QString osSection;          ///< 操作系统分节标题。
+  QString cpuSection;         ///< CPU 分节标题。
+  QString memorySection;      ///< 内存分节标题。
+  QString gpuSection;         ///< 显卡分节标题。
+  QString storageSection;     ///< 存储分节标题。
 
   // 字段标签（渲染时以 "标签: 值" 形式输出）。
-  QString osName;
-  QString kernelVersion;
-  QString architecture;
-  QString cpuModel;
-  QString logicalCores;
-  QString physicalCores;
-  QString totalMemory;
-  QString gpuName;
-  QString detectedDrives;
+  QString osName;             ///< 操作系统字段标签。
+  QString kernelVersion;      ///< 内核版本字段标签。
+  QString architecture;       ///< CPU 架构字段标签。
+  QString cpuModel;           ///< CPU 型号字段标签。
+  QString logicalCores;       ///< 逻辑核心数字段标签。
+  QString physicalCores;      ///< 物理核心数字段标签。
+  QString totalMemory;        ///< 总物理内存字段标签。
+  QString gpuName;            ///< 显卡字段标签。
+  QString detectedDrives;     ///< 检测到驱动器字段标签。
 
   // 各分节整体不可用时的占位提示。
-  QString cpuUnavailable;
-  QString memoryUnavailable;
-  QString gpuUnavailable;
-  QString storageUnavailable;
+  QString cpuUnavailable;     ///< CPU 信息整体不可用时的占位提示行。
+  QString memoryUnavailable;  ///< 内存信息不可用时的占位提示行。
+  QString gpuUnavailable;     ///< 显卡信息不可用时的占位提示行。
+  QString storageUnavailable; ///< 存储信息不可用时的占位提示行。
 };
 
 /**
- * @brief 判断语言代码是否为中文（"zh" 开头，含 "zh_CN" / "zh_TW" 等）。
+ * @brief 判断语言代码是否为中文。
+ * @param[in] languageCode 语言代码；"zh" 开头（含 "zh_CN" / "zh_TW" 等）视为中文。
+ * @return 中文返回 true，其余返回 false。
  */
 bool CARBONUI_DLL_API isChineseLanguageCode(const QString& languageCode);
 
